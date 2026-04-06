@@ -1,0 +1,13 @@
+{
+  "build": {
+    "builder": "NIXPACKS"
+  },
+  "deploy": {
+    "startCommand": "python app.py"
+  },
+  "env": {
+    "GEMINI_API_KEY": {
+      "fromSecret": "GEMINI_API_KEY"
+    }
+  }
+}
