@@ -1,3 +1,5 @@
+import os
+
 import gradio as gr
 
 from service.predict import workflow
@@ -14,7 +16,6 @@ iface = gr.Interface(
         image_mode="RGB",
         sources="upload",
         label="Upload Plant Disease Image",
-    
         show_download_button=True,
         type="pil",
     ),
@@ -26,4 +27,5 @@ iface = gr.Interface(
 )
 
 if __name__ == "__main__":
-    iface.launch(share=True)
+    port = int(os.environ.get("PORT", 8080))
+    iface.launch(server_name="0.0.0.0", server_port=port, share=False)
