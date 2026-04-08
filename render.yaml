@@ -5,7 +5,7 @@ services:
     plan: free
     region: oregon
     pythonVersion: "3.11"
-    buildCommand: python -m pip install --upgrade pip && python -m pip install --prefer-binary -r requirements-render.txt
+    buildCommand: pip install --upgrade pip setuptools wheel && pip install --no-build-isolation --prefer-binary -r requirements-render.txt
     startCommand: python app.py
     envVars:
       - key: GEMINI_API_KEY
