@@ -27,5 +27,7 @@ iface = gr.Interface(
 )
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))
-    iface.launch(server_name="0.0.0.0", server_port=port, share=False)
+    port = int(os.environ.get("PORT", 7860))
+    server_host = "0.0.0.0"
+    print(f"[INFO] Starting Gradio app on {server_host}:{port}")
+    iface.launch(server_name=server_host, server_port=port, share=False)
