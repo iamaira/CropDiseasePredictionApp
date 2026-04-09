@@ -48,7 +48,7 @@ if __name__ == "__main__":
     iface.launch(
         server_name=server_host,
         server_port=port,
-        share=True,
+        share=False,
         inbrowser=False,
         prevent_thread_lock=True,
         show_error=True,
