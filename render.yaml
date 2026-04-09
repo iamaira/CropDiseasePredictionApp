@@ -1,12 +1,10 @@
 services:
   - type: web
     name: crop-disease-prediction-app
-    env: python
+    env: docker
     plan: free
     region: oregon
-    pythonVersion: "3.11"
-    buildCommand: pip install --upgrade pip setuptools wheel && pip install --no-build-isolation --prefer-binary -r requirements-render.txt
-    startCommand: python app.py
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: GEMINI_API_KEY
         sync: false

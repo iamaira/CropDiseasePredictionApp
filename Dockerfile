@@ -6,13 +6,16 @@ WORKDIR /app
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
+    rustc \
+    cargo \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
 COPY requirements.txt .
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies with wheel preference
+RUN pip install --upgrade pip setuptools wheel
+RUN pip install --only-binary=all --prefer-binary -r requirements.txt
 
 # Copy the rest of the application
 COPY . .
