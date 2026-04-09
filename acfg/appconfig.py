@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import os
 import torch
+import traceback
 
 from acfg.modelconfig import ModelConfig
 from ml.app.anomaly import DiseaseOODModule
@@ -76,19 +77,30 @@ class ServiceConfig:
     )
 
 
-# ✅ Load classification model (LightningModule wrapper around DiseaseClassificationModel)
-CLF_MODEL = ClassificationModule.load_from_checkpoint(
-    CLASSIFY_MODEL_CHECKPOINT,
-    model=DiseaseClassificationModel(ModelConfig.PRETRAINED_MODEL_NAME),
-    num_classes=len(ServiceConfig.ID2LABEL),
-).to(get_device()[1])
+# ✅ Load classification model with error handling
+CLF_MODEL = None
+OOD_MODEL = None
 
-CLF_MODEL.eval()
+try:
+    print("[INFO] Loading classification model...")
+    CLF_MODEL = ClassificationModule.load_from_checkpoint(
+        CLASSIFY_MODEL_CHECKPOINT,
+        model=DiseaseClassificationModel(ModelConfig.PRETRAINED_MODEL_NAME),
+        num_classes=len(ServiceConfig.ID2LABEL),
+    ).to(get_device()[1])
+    CLF_MODEL.eval()
+    print("[INFO] Classification model loaded successfully")
+except Exception as e:
+    print(f"[ERROR] Failed to load classification model: {e}")
+    traceback.print_exc()
 
-
-# ✅ Load OOD model (LightningModule that wraps Autoencoder)
-OOD_MODEL = DiseaseOODModule.load_from_checkpoint(
-    OOD_MODEL_CHECKPOINT
-).to(get_device()[1])
-
-OOD_MODEL.eval()
+try:
+    print("[INFO] Loading OOD model...")
+    OOD_MODEL = DiseaseOODModule.load_from_checkpoint(
+        OOD_MODEL_CHECKPOINT
+    ).to(get_device()[1])
+    OOD_MODEL.eval()
+    print("[INFO] OOD model loaded successfully")
+except Exception as e:
+    print(f"[ERROR] Failed to load OOD model: {e}")
+    traceback.print_exc()

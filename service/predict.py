@@ -30,6 +30,9 @@ def transform_for_prediction(img: PIL.Image):
 
 
 def classify_disease(image):
+    if CLF_MODEL is None:
+        raise RuntimeError("Classification model failed to load. Check server logs.")
+    
     image_tensor = transform_for_prediction(image).unsqueeze(0)
 
     with torch.no_grad():

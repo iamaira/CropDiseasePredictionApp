@@ -12,10 +12,14 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 load_dotenv()
 api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
 if not api_key:
-    raise EnvironmentError("❌ GEMINI_API_KEY or GOOGLE_API_KEY not found in .env file")
-
-# Configure GenAI
-genai.configure(api_key=api_key)
+    print("[WARNING] GEMINI_API_KEY or GOOGLE_API_KEY not found in environment. LLM features will not work.")
+else:
+    try:
+        genai.configure(api_key=api_key)
+        print("[INFO] GenAI API configured successfully")
+    except Exception as e:
+        print(f"[ERROR] Failed to configure GenAI API: {e}")
+        api_key = None
 
 SYS_INSTR = (
     "You are a plant disease expert. You will be given queries regarding plant diseases. "
