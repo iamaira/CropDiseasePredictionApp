@@ -23,5 +23,5 @@ COPY . .
 # Expose port
 EXPOSE 7860
 
-# Run with uvicorn - important for proper web server handling
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "7860", "--timeout-keep-alive", "60"]
+# Run the Gradio app directly
+CMD ["python", "app.py"]

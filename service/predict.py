@@ -48,6 +48,8 @@ import traceback
 
 def normalize_label(label: str) -> str:
     """Normalize model labels into readable text."""
+    if not isinstance(label, str):
+        label = str(label)
     label = label.replace("__", " ").strip()
     label = " ".join(label.split())
     return label.title()
@@ -55,6 +57,9 @@ def normalize_label(label: str) -> str:
 
 def parse_gemini_response(response_text: str) -> tuple[str, str]:
     """Extract disease name and remedy from Gemini response."""
+    if not isinstance(response_text, str):
+        response_text = str(response_text)
+
     lines = [line.strip() for line in response_text.split('\n') if line.strip()]
 
     disease_name = "Plant Disease"
@@ -70,7 +75,7 @@ def parse_gemini_response(response_text: str) -> tuple[str, str]:
 
     if disease_name == 'Plant Disease' and lines:
         first_line = lines[0]
-        if len(first_line) < 60 and ' ' in first_line and not first_line.endswith(':'):
+        if isinstance(first_line, str) and len(first_line) < 60 and ' ' in first_line and not first_line.endswith(':'):
             disease_name = first_line
 
     disease_name = normalize_label(disease_name)
@@ -83,7 +88,10 @@ def parse_gemini_response(response_text: str) -> tuple[str, str]:
 
 def workflow(image: PIL.Image):
     try:
-        classifier_label = normalize_label(classify_disease(image))
+        classifier_label = classify_disease(image)
+        if not isinstance(classifier_label, str):
+            classifier_label = str(classifier_label)
+        classifier_label = normalize_label(classifier_label)
         if 'Healthy' in classifier_label:
             classifier_label = 'Plant is Healthy'
 
@@ -98,6 +106,9 @@ def workflow(image: PIL.Image):
                 image_file=image_bytes,
                 return_both=True
             )
+            if not isinstance(disease_and_remedy, str):
+                raise ValueError(f"LLM returned non-string response: {type(disease_and_remedy).__name__}")
+
             llm_disease_name, llm_remedy = parse_gemini_response(disease_and_remedy)
 
             if llm_disease_name and llm_disease_name not in {'Plant Disease', 'Plant is Healthy'}:
@@ -110,6 +121,7 @@ def workflow(image: PIL.Image):
                 raise ValueError('Gemini returned empty remedy')
         except Exception as e:
             print(f"[ERROR] LLM strategy failed: {e}")
+            traceback.print_exc()
             disease_name = classifier_label
             remedy = 'Please consult with a local agricultural extension office for specific diagnosis and treatment recommendations.'
 
