@@ -37,7 +37,7 @@ pandas==2.2.3
 pillow==11.0.0
 protobuf>=3.19.5,<5.0.0dev
 propcache==0.2.0
-pydantic>=2.7.<3.0
+pydantic>=2.7,<3.0
 
 pydub==0.25.1
 python-dotenv==1.0.1
