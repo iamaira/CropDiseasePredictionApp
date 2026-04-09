@@ -45,4 +45,11 @@ if __name__ == "__main__":
     server_host = "0.0.0.0"
     print(f"[INFO] Starting Gradio app on {server_host}:{port}")
     print(f"[INFO] Workflow ready: {WORKFLOW_READY}")
-    iface.launch(server_name=server_host, server_port=port, share=False)
+    iface.launch(
+        server_name=server_host,
+        server_port=port,
+        share=True,
+        inbrowser=False,
+        prevent_thread_lock=True,
+        show_error=True,
+    )
