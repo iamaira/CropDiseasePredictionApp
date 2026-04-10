@@ -62,7 +62,7 @@ iface = gr.Interface(
 )
 
 # Mount Gradio app with FastAPI
-app = gr.mount_gradio_app(app, iface, path="/")
+gr.mount_gradio_app(app, iface, path="/")
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 7860))
