@@ -2,20 +2,31 @@ import os
 import traceback
 import gradio as gr
 
-try:
-    from service.predict import workflow
-    WORKFLOW_READY = True
-except Exception as e:
-    print(f"[ERROR] Failed to load workflow: {e}")
-    traceback.print_exc()
-    WORKFLOW_READY = False
+workflow = None
+WORKFLOW_READY = False
+
+
+def get_workflow():
+    global workflow, WORKFLOW_READY
+    if workflow is None:
+        try:
+            from service.predict import workflow as wf
+            workflow = wf
+            WORKFLOW_READY = True
+            print("[INFO] Workflow loaded successfully")
+        except Exception as e:
+            print(f"[ERROR] Failed to load workflow: {e}")
+            traceback.print_exc()
+            WORKFLOW_READY = False
+    return workflow
 
 
 def process_image(image):
-    if not WORKFLOW_READY:
+    wf = get_workflow()
+    if not WORKFLOW_READY or wf is None:
         return "Error", "The prediction service failed to load. Please check the server logs."
     try:
-        disease_name, remedy = workflow(image)
+        disease_name, remedy = wf(image)
         return disease_name, remedy
     except Exception as e:
         print(f"[ERROR] Prediction failed: {e}")
