@@ -1,16 +1,6 @@
 import os
 import traceback
-from fastapi import FastAPI
 import gradio as gr
-import uvicorn
-
-# Create app first to respond to health checks
-app = FastAPI()
-
-# Health check endpoint for deployment
-@app.get("/health")
-def health_check():
-    return {"status": "ok"}
 
 workflow = None
 WORKFLOW_READY = False
@@ -61,12 +51,17 @@ iface = gr.Interface(
     flagging_mode="never",
 )
 
-# Mount Gradio app with FastAPI
-gr.mount_gradio_app(app, iface, path="/")
-
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 7860))
     server_host = "0.0.0.0"
-    print(f"[INFO] Starting app on {server_host}:{port}")
+    print(f"[INFO] Starting Gradio app on {server_host}:{port}")
     print(f"[INFO] Workflow ready: {WORKFLOW_READY}")
-    uvicorn.run(app, host=server_host, port=port, timeout_keep_alive=60)
+    iface.launch(
+        server_name=server_host,
+        server_port=port,
+        share=True,
+        inbrowser=False,
+        prevent_thread_lock=True,
+        show_error=True,
+        show_api=False,  # Disable API to avoid schema generation issues
+    )
