@@ -1,10 +1,14 @@
 import os
 import traceback
 import gradio as gr
+from fastapi import FastAPI
+from service.predict import workflow
 
 workflow = None
 WORKFLOW_READY = False
 
+# FastAPI instance
+app = FastAPI()
 
 def get_workflow():
     global workflow, WORKFLOW_READY
