@@ -36,16 +36,13 @@ def process_image(image):
 # Create the Gradio interface
 iface = gr.Interface(
     fn=process_image,
-    inputs=gr.Image(
-        image_mode="RGB",
-        type="pil",
-    ),
+    inputs=gr.Image(type="pil"),
     outputs=[
-        gr.Textbox(label="Prediction", placeholder="Disease Prediction"),
-        gr.Markdown(label="Remedy"),
+        gr.Textbox(label="Prediction"),
+        gr.Textbox(label="Remedy"),
     ],
     title="Classify Plant Diseases and Get Remedies",
-    flagging_mode="never",
+    allow_flagging="never",
 )
 
 if __name__ == "__main__":
