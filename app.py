@@ -38,9 +38,6 @@ iface = gr.Interface(
     fn=process_image,
     inputs=gr.Image(
         image_mode="RGB",
-        sources="upload",
-        label="Upload Plant Disease Image",
-        show_download_button=True,
         type="pil",
     ),
     outputs=[
@@ -63,5 +60,9 @@ if __name__ == "__main__":
         inbrowser=False,
         prevent_thread_lock=True,
         show_error=True,
-        show_api=False,  # Disable API to avoid schema generation issues
+        show_api=False,
+        api_name=False,
+        root_path="",
+        auth=None,
+        enable_queue=False,
     )
