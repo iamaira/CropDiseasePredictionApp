@@ -2,7 +2,7 @@ services:
   - type: web
     name: crop-disease-prediction-app
     env: docker
-    plan: free
+    plan: starter
     region: oregon
     dockerfilePath: ./Dockerfile
     envVars:
