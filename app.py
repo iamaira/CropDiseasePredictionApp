@@ -61,8 +61,4 @@ if __name__ == "__main__":
         prevent_thread_lock=True,
         show_error=True,
         show_api=False,
-        api_name=False,
-        root_path="",
-        auth=None,
-        enable_queue=False,
     )
