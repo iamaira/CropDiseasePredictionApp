@@ -1,3 +1,4 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
 aiofiles==23.2.1
 aiohappyeyeballs==2.4.3
 aiohttp==3.10.10
@@ -43,17 +44,14 @@ python-dotenv==1.0.1
 Pygments==2.18.0
 python-dateutil==2.9.0.post0
 python-multipart==0.0.12
-pytorch-lightning==2.4.0
 pytz==2024.2
 PyYAML==6.0.2
 requests==2.32.3
 rich==13.9.4
-torch==2.5.1
-torchvision==0.20.1
-ruff==0.7.2
+torch==2.5.1+cpu
+torchvision==0.20.1+cpu
 safehttpx==0.1.1
 semantic-version==2.10.0
-setuptools>=65.0.0
 shellingham==1.5.4
 six==1.16.0
 sniffio==1.3.1

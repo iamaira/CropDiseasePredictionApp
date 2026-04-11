@@ -1,0 +1,43 @@
+# Version control
+.git
+.github
+
+# Python cache
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.mypy_cache
+.ruff_cache
+
+# Virtual environments
+.venv
+venv
+env
+
+# Node (if any tooling is present)
+node_modules
+
+# Documentation (keep README.md)
+*.md
+!README.md
+
+# Development / local config
+.env
+.env.*
+*.log
+
+# ML training artifacts (not needed at runtime)
+download_dataset.py
+train_classifier.py
+train_ood.py
+check_gemini_models.py
+list_available_models.py
+test_model.py
+plantvillage.zip
+ml/pyproject.toml
+
+# Render-specific files
+render.yaml
+requirements-render.txt
