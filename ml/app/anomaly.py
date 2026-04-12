@@ -1,7 +1,7 @@
 from typing import Tuple
 
 import torch
-from lightning import LightningModule
+from pytorch_lightning import LightningModule
 from torch.nn import functional as F
 
 from ml.app.models.ood import Autoencoder
