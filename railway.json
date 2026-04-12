@@ -8,6 +8,9 @@
   "env": {
     "GEMINI_API_KEY": {
       "fromSecret": "GEMINI_API_KEY"
+    },
+    "GOOGLE_API_KEY": {
+      "fromSecret": "GOOGLE_API_KEY"
     }
   }
 }

@@ -53,6 +53,8 @@ htmlcov/
 # ML/Training
 lightning_logs/
 *.ckpt
+!service/static/PlantDiseaseClassificationModel/**
+!service/static/PlantDiseaseOODModel/**
 .wandb/
 runs/
 

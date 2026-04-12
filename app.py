@@ -3,6 +3,17 @@ import traceback
 import gradio as gr
 from fastapi import FastAPI
 from service.predict import workflow
+from flask import Flask
+import os
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "Crop Disease Prediction API is running!"
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
 
 workflow = None
 WORKFLOW_READY = False
@@ -57,7 +68,7 @@ if __name__ == "__main__":
     iface.launch(
         server_name=server_host,
         server_port=port,
-        share=True,
+        share=False,
         inbrowser=False,
         prevent_thread_lock=True,
         show_error=True,
