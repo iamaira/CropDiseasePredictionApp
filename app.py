@@ -5,18 +5,70 @@ from fastapi import FastAPI
 from service.predict import workflow
 
 import os
-from flask import Flask
+from flask import Flaskrender_template, request
+from PIL import Image
 
+# apna real prediction function import karo
+# example:
+# from service.predict import workflow
 
-app = Flask(__name__)
+app = flask(__name__)
+UPLOAD_FOLDER = "uploads"
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-@app.route("/")
+TREATMENTS = {
+    "Apple___Apple_scab": "Use fungicide and remove infected leaves.",
+    "Apple___Black_rot": "Prune infected branches and apply proper fungicide.",
+    "Tomato___Late_blight": "Use copper-based fungicide and avoid overhead watering.",
+    "Healthy": "No treatment needed. Plant is healthy."
+}
+
+@app.route("/", methods=["GET", "POST"])
 def home():
-    return "Website is LIVE"
+    prediction = None
+    treatment = None
+    image_path = None
+    error = None
+
+    if request.method == "POST":
+        file = request.files.get("image")
+        if not file or file.filename == "":
+            error = "Please upload an image."
+        else:
+            save_path = os.path.join(UPLOAD_FOLDER, file.filename)
+            file.save(save_path)
+            image_path = save_path
+
+            try:
+                # apna actual model call yahan lagao
+                # Example 1:
+                # prediction = workflow(save_path)
+
+                # Temporary test output:
+                prediction = "Tomato___Late_blight"
+
+                treatment = TREATMENTS.get(
+                    prediction,
+                    "Treatment information not available."
+                )
+            except Exception as e:
+                error = f"Prediction failed: {str(e)}"
+
+    return render_template(
+        "index.html",
+        prediction=prediction,
+        treatment=treatment,
+        image_path=image_path,
+        error=error
+    )
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
+
+
+
 
 workflow = None
 WORKFLOW_READY = False

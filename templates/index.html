@@ -1,0 +1,10 @@
+<h1>Upload Image</h1>
+<form method="POST" enctype="multipart/form-data">
+  <input type="file" name="image">
+  <button type="submit">Submit</button>
+</form>
+
+{% if prediction %}
+  <h2>Prediction: {{ prediction }}</h2>
+  <h3>Treatment: {{ treatment }}</h3>
+{% endif %}
