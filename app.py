@@ -3,17 +3,20 @@ import traceback
 import gradio as gr
 from fastapi import FastAPI
 from service.predict import workflow
-from flask import Flask
+
 import os
+from flask import Flask
+
 
 app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return "Crop Disease Prediction API is running!"
+    return "Website is LIVE"
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
 
 workflow = None
 WORKFLOW_READY = False
