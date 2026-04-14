@@ -12,10 +12,14 @@ from service.external import llm_strategy
 
 
 def transform_for_prediction(img: Image.Image):
-
-    z = F.resize(img, [ModelConfig.IMG_SIZE, ModelConfig.IMG_SIZE])
+    img = img.convert("RGB")
+    z = F.resize(img, [224, 224])
     z = F.to_tensor(z)
-    z = F.normalize(z, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
+    z = F.normalize(
+        z,
+        mean=(0.485, 0.456, 0.406),
+        std=(0.229, 0.224, 0.225)
+    )
     return z.to(get_device()[1])
 
 
@@ -26,13 +30,19 @@ def classify_disease(image):
     image_tensor = transform_for_prediction(image).unsqueeze(0)
 
     with torch.no_grad():
+        # Lightning wrapper ke andar actual backbone call
         outputs = CLF_MODEL.model(image_tensor)
-        probs = torch.softmax(outputs, dim=1)
-        _, predicted = torch.max(probs, 1)
-        prediction = predicted.item()
 
-        print("Predicted index:", prediction)
-        print("Predicted label:", ServiceConfig.ID2LABEL[prediction])
+        probs = torch.softmax(outputs, dim=1)
+        top_probs, top_indices = torch.topk(probs, 5, dim=1)
+
+        print("Top 5 predictions:")
+        for i in range(5):
+            idx = top_indices[0][i].item()
+            prob = top_probs[0][i].item()
+            print(f"{i+1}. {idx} -> {ServiceConfig.ID2LABEL[idx]} ({prob:.4f})")
+
+        prediction = top_indices[0][0].item()
 
     return ServiceConfig.ID2LABEL[prediction]
 
