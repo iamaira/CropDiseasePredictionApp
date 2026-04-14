@@ -1,5 +1,5 @@
-import os
 import traceback
+from PIL import Image
 import gradio as gr
 from fastapi import FastAPI
 from service.predict import workflow
@@ -35,13 +35,8 @@ def home():
             save_path = os.path.join(UPLOAD_FOLDER, file.filename)
             file.save(save_path)
 
-            prediction = workflow(save_path)
-
-            treatment = TREATMENTS.get(
-                prediction,
-                "Treatment information not available."
-            )
-
+            img = Image.open(save_path).convert("RGB")
+            prediction, treatment = workflow(img)
     return render_template(
         "index.html",
         prediction=prediction,
