@@ -32,14 +32,15 @@ def home():
         file = request.files["file"]
 
         if file:
-            # TEMP (abhi model off hai)
-            prediction = "Tomato___Late_blight"
+        save_path = os.path.join(UPLOAD_FOLDER, file.filename)
+        file.save(save_path)
 
-            treatment = TREATMENTS.get(
-                prediction,
-                "Treatment information not available."
-            )
+        prediction = workflow(save_path)
 
+        treatment = TREATMENTS.get(
+            prediction,
+            "Treatment information not available."
+        )
     return render_template(
         "index.html",
         prediction=prediction,
