@@ -102,20 +102,17 @@ def workflow(image: Image.Image):
 
         try:
             disease_and_remedy = llm_strategy(
-                ServiceConfig.LLM_MODEL_KEY,
-                '',
-                image_file=image_bytes,
-                return_both=True
-            )
+    ServiceConfig.LLM_MODEL_KEY,
+    f"The plant disease is '{classifier_label}'. Give only the treatment and management steps in simple text. Do not rename the disease.",
+    image_file=image_bytes,
+    return_both=True
+)
             if not isinstance(disease_and_remedy, str):
                 raise ValueError(f"LLM returned non-string response: {type(disease_and_remedy).__name__}")
 
             llm_disease_name, llm_remedy = parse_gemini_response(disease_and_remedy)
 
-            if llm_disease_name and llm_disease_name not in {'Plant Disease', 'Plant is Healthy'}:
-                disease_name = llm_disease_name
-            else:
-                disease_name = classifier_label
+            disease_name = classifier_label
 
             remedy = llm_remedy
             if not remedy:
