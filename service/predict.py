@@ -15,7 +15,7 @@ def transform_for_prediction(img: Image.Image):
 
     z = F.resize(img, [ModelConfig.IMG_SIZE, ModelConfig.IMG_SIZE])
     z = F.to_tensor(z)
-    z = F.normalize(z, mean=ModelConfig.IMG_MEAN, std=ModelConfig.IMG_STD)
+    z = F.normalize(z, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
     return z.to(get_device()[1])
 
 
