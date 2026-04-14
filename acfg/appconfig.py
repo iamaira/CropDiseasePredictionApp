@@ -86,8 +86,7 @@ try:
     CLF_MODEL = ClassificationModule.load_from_checkpoint(
         CLASSIFY_MODEL_CHECKPOINT,
         model=DiseaseClassificationModel(
-            ModelConfig.PRETRAINED_MODEL_NAME,
-            num_classes=len(ServiceConfig.ID2LABEL)
+            ModelConfig.PRETRAINED_MODEL_NAME
         ),
         num_classes=len(ServiceConfig.ID2LABEL)
     ).to(get_device()[1])
