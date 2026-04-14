@@ -1,4 +1,5 @@
 import os
+from PIL import Image
 import torch
 from acfg.modelconfig import ModelConfig
 import torchvision.transforms.functional as F
@@ -8,7 +9,7 @@ from acfg.appconfig import CLF_MODEL, ServiceConfig, get_device
 from service.external import llm_strategy
 
 
-def transform_for_prediction(img: PIL.Image):
+def transform_for_prediction(img: Image.Image):
     """Transforms a PIL image for model prediction.
 
     This function applies a series of transformations to prepare an image for model inference:
@@ -86,7 +87,7 @@ def parse_gemini_response(response_text: str) -> tuple[str, str]:
     return disease_name, remedy
 
 
-def workflow(image: PIL.Image):
+def workflow(image: Image.Image):
     try:
         classifier_label = classify_disease(image)
         if not isinstance(classifier_label, str):
