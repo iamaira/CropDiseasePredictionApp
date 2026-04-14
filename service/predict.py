@@ -26,9 +26,13 @@ def classify_disease(image):
     image_tensor = transform_for_prediction(image).unsqueeze(0)
 
     with torch.no_grad():
-        outputs = CLF_MODEL(image_tensor)
-        _, predicted = torch.max(outputs, 1)
+        outputs = CLF_MODEL.model(image_tensor)
+        probs = torch.softmax(outputs, dim=1)
+        _, predicted = torch.max(probs, 1)
         prediction = predicted.item()
+
+        print("Predicted index:", prediction)
+        print("Predicted label:", ServiceConfig.ID2LABEL[prediction])
 
     return ServiceConfig.ID2LABEL[prediction]
 
