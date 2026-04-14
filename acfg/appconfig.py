@@ -85,9 +85,10 @@ try:
     print("[INFO] Loading classification model...")
 
     clf_backbone = DiseaseClassificationModel(
-        ModelConfig.PRETRAINED_MODEL_NAME,
-        num_classes=len(ServiceConfig.ID2LABEL)
-    )
+    ModelConfig.PRETRAINED_MODEL_NAME,
+    len(ServiceConfig.ID2LABEL)
+)
+    
 
     CLF_MODEL = ClassificationModule.load_from_checkpoint(
         CLASSIFY_MODEL_CHECKPOINT,
