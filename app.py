@@ -11,8 +11,7 @@ from PIL import Image
 # apna real prediction function import karo
 # example:
 # from service.predict import workflow
-
-app = flask(__name__)
+app = Flask(__name__)
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
