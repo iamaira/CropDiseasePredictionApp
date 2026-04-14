@@ -83,11 +83,15 @@ OOD_MODEL = None
 
 try:
     print("[INFO] Loading classification model...")
+
+    clf_backbone = DiseaseClassificationModel(
+        ModelConfig.PRETRAINED_MODEL_NAME,
+        num_classes=len(ServiceConfig.ID2LABEL)
+    )
+
     CLF_MODEL = ClassificationModule.load_from_checkpoint(
         CLASSIFY_MODEL_CHECKPOINT,
-        model=DiseaseClassificationModel(
-            ModelConfig.PRETRAINED_MODEL_NAME
-        ),
+        model=clf_backbone,
         num_classes=len(ServiceConfig.ID2LABEL)
     ).to(get_device()[1])
 
@@ -96,14 +100,10 @@ try:
     WORKFLOW_READY = True
 
 except Exception as e:
-    print("[WARNING] Classification model failed:", e)
+    print(f"[ERROR] Failed to load classification model: {e}")
     CLF_MODEL = None
-    WORKFLOW_READY = False
-
-except Exception as e:
-    print("[WARNING] Classification model failed:", e)
-    CLF_MODEL = None
-    WORKFLOW_READY = False
+    WORKFLOW_READY = False   
+    traceback.print_exc()
 try:
     print("[INFO] Loading OOD model...")
     OOD_MODEL = DiseaseOODModule.load_from_checkpoint(
@@ -111,9 +111,6 @@ try:
     ).to(get_device()[1])
     OOD_MODEL.eval()
     print("[INFO] OOD model loaded successfully")
-    WORKFLOW_READY = True
-
 except Exception as e:
-    print("[WARNING] OOD model failed, continuing without it:", e)
-    OOD_MODEL = None
-    WORKFLOW_READY = False
+    print(f"[ERROR] Failed to load OOD model: {e}")
+    traceback.print_exc()
