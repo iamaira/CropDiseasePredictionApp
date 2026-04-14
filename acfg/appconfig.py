@@ -101,6 +101,9 @@ try:
     ).to(get_device()[1])
     OOD_MODEL.eval()
     print("[INFO] OOD model loaded successfully")
+    WORKFLOW_READY = True
+
 except Exception as e:
-    print(f"[ERROR] Failed to load OOD model: {e}")
-    traceback.print_exc()
+    print("[WARNING] OOD model failed, continuing without it:", e)
+    OOD_MODEL = None
+    WORKFLOW_READY = False
