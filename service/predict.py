@@ -30,22 +30,20 @@ def classify_disease(image):
     image_tensor = transform_for_prediction(image).unsqueeze(0)
 
     with torch.no_grad():
-        # Lightning wrapper ke andar actual backbone call
         outputs = CLF_MODEL.model(image_tensor)
-
         probs = torch.softmax(outputs, dim=1)
         top_probs, top_indices = torch.topk(probs, 5, dim=1)
 
-        print("Top 5 predictions:")
+        print("=== TOP 5 PREDICTIONS ===", flush=True)
         for i in range(5):
             idx = top_indices[0][i].item()
             prob = top_probs[0][i].item()
-            print(f"{i+1}. {idx} -> {ServiceConfig.ID2LABEL[idx]} ({prob:.4f})")
+            print(f"{i+1}. {idx} -> {ServiceConfig.ID2LABEL[idx]} ({prob:.4f})", flush=True)
 
         prediction = top_indices[0][0].item()
+        print(f"FINAL PREDICTION: {ServiceConfig.ID2LABEL[prediction]}", flush=True)
 
     return ServiceConfig.ID2LABEL[prediction]
-
 
 
 
