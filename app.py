@@ -31,7 +31,7 @@ def home():
     if request.method == "POST":
         file = request.files["file"]
 
-        if file:
+    if file:
         save_path = os.path.join(UPLOAD_FOLDER, file.filename)
         file.save(save_path)
 
