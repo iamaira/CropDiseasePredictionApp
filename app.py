@@ -26,32 +26,25 @@ TREATMENTS = {
 def home():
     prediction = None
     treatment = None
-    image_path = None
     error = None
 
     if request.method == "POST":
-        file = request.files.get("image")
-        if not file or file.filename == "":
-            error = "Please upload an image."
-        else:
-            save_path = os.path.join(UPLOAD_FOLDER, file.filename)
-            file.save(save_path)
-            image_path = save_path
+        file = request.files["file"]
 
-            try:
-                # apna actual model call yahan lagao
-                # Example 1:
-                # prediction = workflow(save_path)
+        if file:
+            # TEMP (abhi model off hai)
+            prediction = "Tomato___Late_blight"
 
-                # Temporary test output:
-                prediction = "Tomato___Late_blight"
+            treatment = TREATMENTS.get(
+                prediction,
+                "Treatment information not available."
+            )
 
-                treatment = TREATMENTS.get(
-                    prediction,
-                    "Treatment information not available."
-                )
-            except Exception as e:
-                error = f"Prediction failed: {str(e)}"
+    return render_template(
+        "index.html",
+        prediction=prediction,
+        treatment=treatment
+    )
 
     return render_template(
         "index.html",

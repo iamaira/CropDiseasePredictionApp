@@ -8,3 +8,28 @@
   <h2>Prediction: {{ prediction }}</h2>
   <h3>Treatment: {{ treatment }}</h3>
 {% endif %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Crop Disease Predictor</title>
+</head>
+<body>
+
+    <h1>🌿 Crop Disease Detection</h1>
+
+    <form method="POST" enctype="multipart/form-data">
+        <input type="file" name="file" required>
+        <br><br>
+        <button type="submit">Predict</button>
+    </form>
+
+    {% if prediction %}
+        <h2>Prediction: {{ prediction }}</h2>
+    {% endif %}
+
+    {% if treatment %}
+        <h3>Treatment: {{ treatment }}</h3>
+    {% endif %}
+
+</body>
+</html>
