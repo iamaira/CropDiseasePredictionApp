@@ -1,29 +1,18 @@
 import os
 from PIL import Image
 import torch
-from acfg.modelconfig import ModelConfig
+
 import torchvision.transforms.functional as F
+import io
+import traceback
 
-
+from acfg.modelconfig import ModelConfig
 from acfg.appconfig import CLF_MODEL, ServiceConfig, get_device
 from service.external import llm_strategy
 
 
 def transform_for_prediction(img: Image.Image):
-    """Transforms a PIL image for model prediction.
 
-    This function applies a series of transformations to prepare an image for model inference:
-    1. Resizes the image to the model's expected input size
-    2. Converts the image to a tensor
-    3. Normalizes the tensor using preconfigured mean and std values
-
-    Args:
-        img (PIL.Image): Input image to transform
-
-    Returns:
-        torch.Tensor: Transformed image tensor ready for model inference
-    """
-    z = img
     z = F.resize(img, [ModelConfig.IMG_SIZE, ModelConfig.IMG_SIZE])
     z = F.to_tensor(z)
     z = F.normalize(z, mean=ModelConfig.IMG_MEAN, std=ModelConfig.IMG_STD)
@@ -33,7 +22,7 @@ def transform_for_prediction(img: Image.Image):
 def classify_disease(image):
     if CLF_MODEL is None:
         raise RuntimeError("Classification model failed to load. Check server logs.")
-    
+
     image_tensor = transform_for_prediction(image).unsqueeze(0)
 
     with torch.no_grad():
@@ -44,11 +33,10 @@ def classify_disease(image):
     return ServiceConfig.ID2LABEL[prediction]
 
 
-import io
-import traceback
+
 
 def normalize_label(label: str) -> str:
-    """Normalize model labels into readable text."""
+
     if not isinstance(label, str):
         label = str(label)
     label = label.replace("__", " ").strip()
@@ -57,7 +45,8 @@ def normalize_label(label: str) -> str:
 
 
 def parse_gemini_response(response_text: str) -> tuple[str, str]:
-    """Extract disease name and remedy from Gemini response."""
+
+
     if not isinstance(response_text, str):
         response_text = str(response_text)
 
@@ -68,20 +57,10 @@ def parse_gemini_response(response_text: str) -> tuple[str, str]:
         if line.startswith('###'):
             disease_name = line.replace('###', '').strip()
             break
-        if ':' in line:
-            key, value = line.split(':', 1)
-            if key.lower() in {'disease', 'diagnosis', 'identified disease', 'possible disease'}:
-                disease_name = value.strip()
-                break
 
-    if disease_name == 'Plant Disease' and lines:
-        first_line = lines[0]
-        if isinstance(first_line, str) and len(first_line) < 60 and ' ' in first_line and not first_line.endswith(':'):
-            disease_name = first_line
-
+    
     disease_name = normalize_label(disease_name)
-    if 'Healthy' in disease_name:
-        disease_name = 'Plant is Healthy'
+
 
     remedy = response_text.strip()
     return disease_name, remedy
@@ -89,42 +68,62 @@ def parse_gemini_response(response_text: str) -> tuple[str, str]:
 
 def workflow(image: Image.Image):
     try:
+        # ✅ Step 1: classifier prediction
         classifier_label = classify_disease(image)
-        if not isinstance(classifier_label, str):
-            classifier_label = str(classifier_label)
+
         classifier_label = normalize_label(classifier_label)
+
         if 'Healthy' in classifier_label:
             classifier_label = 'Plant is Healthy'
 
+        # ✅ Convert image to bytes
         image_bytes_io = io.BytesIO()
         image.save(image_bytes_io, format='JPEG')
         image_bytes = image_bytes_io.getvalue()
 
         try:
+            # ✅ Gemini call with strong prompt
             disease_and_remedy = llm_strategy(
-    ServiceConfig.LLM_MODEL_KEY,
-    f"The plant disease is '{classifier_label}'. Give only the treatment and management steps in simple text. Do not rename the disease.",
-    image_file=image_bytes,
-    return_both=True
-)
-            if not isinstance(disease_and_remedy, str):
-                raise ValueError(f"LLM returned non-string response: {type(disease_and_remedy).__name__}")
+                ServiceConfig.LLM_MODEL_KEY,
+                f"""
+You are a plant disease expert.
 
-            llm_disease_name, llm_remedy = parse_gemini_response(disease_and_remedy)
+The detected disease is: {classifier_label}
+
+Give:
+1. Exact treatment for this disease
+2. Chemicals or fungicides if needed
+3. Prevention tips
+
+DO NOT rename the disease.
+DO NOT say "Plant Disease Detected".
+Give answer in clean bullet points.
+""",
+                image_file=image_bytes,
+                return_both=True
+            )
+
+            if not isinstance(disease_and_remedy, str):
+                raise ValueError("Invalid Gemini response")
+
+            _, llm_remedy = parse_gemini_response(disease_and_remedy)
 
             disease_name = classifier_label
 
             remedy = llm_remedy
+
             if not remedy:
-                raise ValueError('Gemini returned empty remedy')
+                raise ValueError("Empty remedy")
+
         except Exception as e:
-            print(f"[ERROR] LLM strategy failed: {e}")
+            print("[ERROR] LLM failed:", e)
             traceback.print_exc()
             disease_name = classifier_label
-            remedy = 'Please consult with a local agricultural extension office for specific diagnosis and treatment recommendations.'
+            remedy = "Consult an agricultural expert for proper treatment."
 
         return disease_name, remedy
+
     except Exception as e:
-        print(f"[ERROR] Workflow failed: {e}")
+        print("[ERROR] Workflow failed:", e)
         traceback.print_exc()
-        return 'Error', f'An error occurred while processing the image: {str(e)}'
+        return "Error", f"An error occurred: {str(e)}"
