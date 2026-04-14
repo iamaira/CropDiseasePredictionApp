@@ -84,11 +84,22 @@ OOD_MODEL = None
 try:
     print("[INFO] Loading classification model...")
     CLF_MODEL = ClassificationModule.load_from_checkpoint(
-        CLASSIFY_MODEL_CHECKPOINT
-    )
+        CLASSIFY_MODEL_CHECKPOINT,
+        model=DiseaseClassificationModel(
+            ModelConfig.PRETRAINED,
+            num_classes=len(ServiceConfig.ID2LABEL)
+        ),
+        num_classes=len(ServiceConfig.ID2LABEL)
+    ).to(get_device()[1])
+
     CLF_MODEL.eval()
     print("[INFO] Classification model loaded successfully")
     WORKFLOW_READY = True
+
+except Exception as e:
+    print("[WARNING] Classification model failed:", e)
+    CLF_MODEL = None
+    WORKFLOW_READY = False
 
 except Exception as e:
     print("[WARNING] Classification model failed:", e)
