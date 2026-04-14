@@ -83,10 +83,9 @@ OOD_MODEL = None
 
 try:
     print("[INFO] Loading classification model...")
-
+    
     clf_backbone = DiseaseClassificationModel(
-    ModelConfig.PRETRAINED_MODEL_NAME,
-    len(ServiceConfig.ID2LABEL)
+    ModelConfig.PRETRAINED_MODEL_NAME
 )
     
 
