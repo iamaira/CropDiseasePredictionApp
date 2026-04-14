@@ -29,24 +29,24 @@ def home():
     error = None
 
     if request.method == "POST":
-        file = request.files["file"]
+        file = request.files.get("file")
 
-    if file:
-        save_path = os.path.join(UPLOAD_FOLDER, file.filename)
-        file.save(save_path)
+        if file and file.filename != "":
+            save_path = os.path.join(UPLOAD_FOLDER, file.filename)
+            file.save(save_path)
 
-        prediction = workflow(save_path)
+            prediction = workflow(save_path)
 
-        treatment = TREATMENTS.get(
-            prediction,
-            "Treatment information not available."
-        )
+            treatment = TREATMENTS.get(
+                prediction,
+                "Treatment information not available."
+            )
+
     return render_template(
         "index.html",
         prediction=prediction,
         treatment=treatment
     )
-
     return render_template(
         "index.html",
         prediction=prediction,
