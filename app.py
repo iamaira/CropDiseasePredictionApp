@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from service.predict import workflow
 
 import os
-from flask import Flaskrender_template, request
+from flask import Flask, render_template, request
 from PIL import Image
 
 # apna real prediction function import karo
