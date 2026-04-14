@@ -1,19 +1,9 @@
-<h1>Upload Image</h1>
-<form method="POST" enctype="multipart/form-data">
-  <input type="file" name="image">
-  <button type="submit">Submit</button>
-</form>
-
-{% if prediction %}
-  <h2>Prediction: {{ prediction }}</h2>
-  <h3>Treatment: {{ treatment }}</h3>
-{% endif %}
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Crop Disease Predictor</title>
+    <title>Crop Disease Detection</title>
 </head>
-<body>
+<body style="text-align:center; font-family:Arial;">
 
     <h1>🌿 Crop Disease Detection</h1>
 
@@ -25,9 +15,6 @@
 
     {% if prediction %}
         <h2>Prediction: {{ prediction }}</h2>
-    {% endif %}
-
-    {% if treatment %}
         <h3>Treatment: {{ treatment }}</h3>
     {% endif %}
 
