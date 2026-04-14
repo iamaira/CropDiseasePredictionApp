@@ -1,4 +1,4 @@
-import PIL
+import os
 import torch
 from acfg.modelconfig import ModelConfig
 import torchvision.transforms.functional as F
