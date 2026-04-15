@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 @dataclass
 class ModelConfig:
-    TRAIN_DATA_PATH: str = "ml/input/PlantDiseaseClassificationDataset/train"
+    TRAIN_DATA_PATH: str = "ml/input/PlantDiseaseClassificationDataset/train/PlantVillage"
     VAL_DATA_PATH: str = "ml/input/PlantDiseaseClassificationDataset/valid"
     TEST_DATA_PATH: str = "ml/input/PlantDiseaseClassificationDataset/test"
     N_INPUT_CHANNELS = 3

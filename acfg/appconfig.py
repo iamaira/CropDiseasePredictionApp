@@ -34,8 +34,8 @@ def get_device():
 @dataclass
 class ServiceConfig:
     LLM_MODEL_KEY = "gemini"
-    OOD_THRESHOLD = 0.034
-    CLF_CONFIDENCE_THRESHOLD = 0.50
+    OOD_THRESHOLD = 5.0
+    CLF_CONFIDENCE_THRESHOLD = 0.80
     ID2LABEL = (
         "Apple scab",
         "Apple Black rot",

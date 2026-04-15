@@ -19,7 +19,7 @@ RUN pip install --upgrade pip setuptools wheel && \
 COPY . .
 
 # Expose port
-EXPOSE 7860
+EXPOSE 5000
 
-# Run the Gradio app directly
-CMD ["python", "app.py"]
+# Run the Flask app with Gunicorn in production
+CMD ["sh", "-c", "gunicorn -w 1 -b 0.0.0.0:${PORT:-5000} app:app"]
