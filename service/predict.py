@@ -96,26 +96,18 @@ def workflow(image: Image.Image):
     try:
         image_tensor = transform_for_prediction(image).unsqueeze(0)
 
-        
-
         classifier_label, confidence = classify_disease(image_tensor)
         classifier_label = normalize_label(classifier_label)
 
         print(f"[INFO] classifier confidence: {confidence:.4f}", flush=True)
 
-        # Smart decision logic
         if confidence < 0.80:
-            if confidence > 0.55:
-                return (
-                    "Plant is Healthy",
-                    "The leaf appears healthy. No treatment needed."
-                )
             return (
                 "Uncertain",
-                f"Model confidence is low ({confidence:.2f}). Please upload a clearer leaf image with plain background."
+                f"Model confidence is low ({confidence:.2f}). Please upload a clearer single-leaf image with plain background."
             )
 
-        if "Healthy" in classifier_label:
+        if "Healthy" in classifier_label and confidence >= 0.80:
             return (
                 classifier_label,
                 "The leaf appears healthy. No treatment needed."
