@@ -208,7 +208,7 @@ def workflow(image: Image.Image):
         print(f"[INFO] classifier confidence: {confidence:.4f}", flush=True)
 
         # 1) Very low confidence -> uncertain
-        if confidence < 0.45:
+        if confidence < 0.50:
             return (
                 "Uncertain",
                 "Image unclear. Please upload a clear single-leaf image."
@@ -224,7 +224,7 @@ def workflow(image: Image.Image):
         # 3) DEMO HACK:
         # Model is over-predicting Apple Cedar Rust on many healthy leaves.
         # So unless confidence is very high, treat Apple Cedar Rust as healthy fallback.
-        if classifier_label == "Apple Cedar Rust" and confidence < 0.90:
+        if classifier_label == "Apple Cedar Rust" and confidence < 0.85:
             return (
                 "Plant is Healthy",
                 "The leaf appears healthy they do not need any remedy or treatement."
