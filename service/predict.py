@@ -101,7 +101,7 @@ def workflow(image: Image.Image):
 
         print(f"[INFO] classifier confidence: {confidence:.4f}", flush=True)
 
-        if confidence < 0.80:
+        if confidence < 0.50:
             return (
                 "Uncertain",
                 f"Model confidence is low ({confidence:.2f}). Please upload a clearer single-leaf image with plain background."
