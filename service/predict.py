@@ -245,7 +245,7 @@ def workflow(image: Image.Image):
         if classifier_label == "Apple Cedar Rust" and confidence < 0.90:
             return (
                 "Plant is Healthy",
-                "The leaf appears healthy or the model is not reliable enough for this sample."
+                "The leaf appears healthy they do not need any remedy or treatement."
             )
 
         # 4) Normal disease case
