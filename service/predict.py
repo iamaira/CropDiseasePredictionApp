@@ -1,13 +1,13 @@
-import os
 from PIL import Image
+
 import torch
 
 import torchvision.transforms.functional as F
-import io
+
 import traceback
 
 from acfg.modelconfig import ModelConfig
-from acfg.appconfig import CLF_MODEL, ServiceConfig, get_device
+from acfg.appconfig import CLF_MODEL, OOD_MODEL, ServiceConfig, get_device
 from service.external import llm_strategy
 
 
@@ -23,14 +23,15 @@ def transform_for_prediction(img: Image.Image):
     return z.to(get_device()[1])
 
 
-def classify_disease(image):
+def classify_disease(image_tensor):
     if CLF_MODEL is None:
         raise RuntimeError("Classification model failed to load. Check server logs.")
 
-    image_tensor = transform_for_prediction(image).unsqueeze(0)
-
     with torch.no_grad():
-        outputs = CLF_MODEL.model(image_tensor)
+        # Try actual backbone first
+        model_to_run = CLF_MODEL.model if hasattr(CLF_MODEL, "model") else CLF_MODEL
+        outputs = model_to_run(image_tensor)
+
         probs = torch.softmax(outputs, dim=1)
         top_probs, top_indices = torch.topk(probs, 5, dim=1)
 
@@ -41,9 +42,10 @@ def classify_disease(image):
             print(f"{i+1}. {idx} -> {ServiceConfig.ID2LABEL[idx]} ({prob:.4f})", flush=True)
 
         prediction = top_indices[0][0].item()
-        print(f"FINAL PREDICTION: {ServiceConfig.ID2LABEL[prediction]}", flush=True)
+        confidence = top_probs[0][0].item()
+        print(f"FINAL PREDICTION: {ServiceConfig.ID2LABEL[prediction]} ({confidence:.4f})", flush=True)
 
-    return ServiceConfig.ID2LABEL[prediction]
+    return ServiceConfig.ID2LABEL[prediction], confidence
 
 
 
@@ -56,73 +58,86 @@ def normalize_label(label: str) -> str:
     return label.title()
 
 
-def parse_gemini_response(response_text: str) -> tuple[str, str]:
+def clean_remedy_text(remedy: str, disease_name: str) -> str:
+    if not isinstance(remedy, str):
+        remedy = str(remedy)
 
+    lines = [line.strip() for line in remedy.splitlines() if line.strip()]
+    cleaned_lines = []
 
-    if not isinstance(response_text, str):
-        response_text = str(response_text)
-
-    lines = [line.strip() for line in response_text.split('\n') if line.strip()]
-
-    disease_name = "Plant Disease"
     for line in lines:
-        if line.startswith('###'):
-            disease_name = line.replace('###', '').strip()
-            break
+        lower_line = line.lower()
+        # Remove heading lines and explicit disease labels
+        if lower_line.startswith("###"):
+            continue
+        if lower_line.startswith("disease:") or lower_line.startswith("**disease name:"):
+            continue
+        if lower_line.startswith("### remedy for"):
+            continue
+        if lower_line.startswith("remedy for"):
+            continue
 
-    
-    disease_name = normalize_label(disease_name)
+        # Normalize leading markdown before checking the disease name
+        stripped_line = line.lstrip('* ').strip()
+        stripped_lower = stripped_line.lower()
+        if stripped_lower.startswith(f"{disease_name.lower()}"):
+            stripped_line = stripped_line[len(disease_name):].strip(" :-*")
+            if not stripped_line:
+                continue
+            line = stripped_line
+
+        line = line.replace("**", "")
+        cleaned_lines.append(line)
+
+    if not cleaned_lines:
+        return remedy.strip()
+
+    return "\n".join(cleaned_lines).strip()
 
 
-    remedy = response_text.strip()
-    return disease_name, remedy
+def detect_out_of_distribution(image_tensor: torch.Tensor):
+    if OOD_MODEL is None:
+        return False, None
+
+    OOD_MODEL.eval()
+    with torch.no_grad():
+        reconstructed = OOD_MODEL(image_tensor)
+        score = torch.mean((reconstructed - image_tensor) ** 2).item()
+
+    print(f"[OOD] score: {score:.6f}", flush=True)
+    return score > ServiceConfig.OOD_THRESHOLD, score
 
 
 def workflow(image: Image.Image):
     try:
+        image_tensor = transform_for_prediction(image).unsqueeze(0)
+
         # ✅ Step 1: classifier prediction
-        classifier_label = classify_disease(image)
+        classifier_label, confidence = classify_disease(image_tensor)
+        print(f"[INFO] classifier confidence: {confidence:.4f}", flush=True)
 
         classifier_label = normalize_label(classifier_label)
 
         if 'Healthy' in classifier_label:
             classifier_label = 'Plant is Healthy'
 
-        # ✅ Convert image to bytes
-        image_bytes_io = io.BytesIO()
-        image.save(image_bytes_io, format='JPEG')
-        image_bytes = image_bytes_io.getvalue()
+
 
         try:
-            # ✅ Gemini call with strong prompt
-            disease_and_remedy = llm_strategy(
+            # ✅ Gemini call using the classifier label for remedies
+            remedy = llm_strategy(
                 ServiceConfig.LLM_MODEL_KEY,
-                f"""
-You are a plant disease expert.
-
-The detected disease is: {classifier_label}
-
-Give:
-1. Exact treatment for this disease
-2. Chemicals or fungicides if needed
-3. Prevention tips
-
-DO NOT rename the disease.
-DO NOT say "Plant Disease Detected".
-Give answer in clean bullet points.
-""",
-                image_file=image_bytes,
-                return_both=True
+                classifier_label,
+                return_both=False
             )
 
-            if not isinstance(disease_and_remedy, str):
+            if not isinstance(remedy, str):
                 raise ValueError("Invalid Gemini response")
 
-            _, llm_remedy = parse_gemini_response(disease_and_remedy)
+
 
             disease_name = classifier_label
-
-            remedy = llm_remedy
+            remedy = clean_remedy_text(remedy.strip(), disease_name)
 
             if not remedy:
                 raise ValueError("Empty remedy")

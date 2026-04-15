@@ -35,6 +35,7 @@ def get_device():
 class ServiceConfig:
     LLM_MODEL_KEY = "gemini"
     OOD_THRESHOLD = 0.034
+    CLF_CONFIDENCE_THRESHOLD = 0.70
     ID2LABEL = (
         "Apple scab",
         "Apple Black rot",
@@ -83,7 +84,7 @@ OOD_MODEL = None
 
 try:
     print("[INFO] Loading classification model...")
-    
+
     clf_backbone = DiseaseClassificationModel(
     ModelConfig.PRETRAINED_MODEL_NAME
 )
@@ -113,4 +114,5 @@ try:
     print("[INFO] OOD model loaded successfully")
 except Exception as e:
     print(f"[ERROR] Failed to load OOD model: {e}")
+    OOD_MODEL = None
     traceback.print_exc()
