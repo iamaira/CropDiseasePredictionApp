@@ -4,14 +4,10 @@ from PIL import Image
 from flask import Flask, render_template, request
 from service.predict import workflow
 
-
-
-
-
 app = Flask(__name__)
+
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -30,12 +26,26 @@ def home():
 
             try:
                 img = Image.open(save_path).convert("RGB")
-                prediction, treatment = workflow(img)
-                print(f"[INFO] workflow result: prediction={prediction!r}, treatment={treatment!r}", flush=True)
-                if prediction is None and treatment is None:
-                    error = "No prediction returned. Please try a different image."
+
+                result = workflow(img)
+
+                if result is None:
+                    prediction = "Error"
+                    treatment = "Workflow returned nothing."
+                elif isinstance(result, tuple) and len(result) == 2:
+                    prediction, treatment = result
+                else:
+                    prediction = "Error"
+                    treatment = f"Unexpected workflow result: {result}"
+
+                print(
+                    f"[INFO] workflow result: prediction={prediction!r}, treatment={treatment!r}",
+                    flush=True,
+                )
+
             except Exception as e:
                 error = f"Prediction failed: {e}"
+                print("[ERROR] Prediction failed:", e, flush=True)
                 traceback.print_exc()
         else:
             error = "Please upload a valid image file."
@@ -47,13 +57,7 @@ def home():
         error=error,
     )
 
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
-
-
-
-
-
-
