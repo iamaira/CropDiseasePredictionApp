@@ -219,26 +219,21 @@ def workflow(image: Image.Image):
         image_tensor = transform_for_prediction(image).unsqueeze(0)
 
         classifier_label, confidence = classify_disease(image_tensor)
-        if confidence <0.75:
-            return(
-                "Plant is healthy",
-                "The leaf appears healthy. No treatment needed."
-            )
-
         classifier_label = normalize_label(classifier_label)
 
         print(f"[INFO] classifier confidence: {confidence:.4f}", flush=True)
 
-        if "Healthy" in classifier_label and confidence >= 0.60:
+        # Healthy fallback for low-confidence cases
+        if confidence < 0.70:
+            return (
+                "Plant is Healthy",
+                "The leaf appears healthy or the model is not confident enough. No treatment is recommended unless visible symptoms are present."
+            )
+
+        if "Healthy" in classifier_label:
             return (
                 "Plant is Healthy",
                 "The leaf appears healthy. No treatment is needed."
-            )
-
-        if confidence < 0.60:
-            return (
-                "Uncertain",
-                f"Model confidence is low ({confidence:.2f}). The current model is not confident enough for a reliable diagnosis."
             )
 
         remedy = get_offline_remedy(classifier_label)
