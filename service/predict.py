@@ -8,127 +8,109 @@ from acfg.appconfig import CLF_MODEL, ServiceConfig, get_device
 
 
 REMEDY_DB = {
-    "Apple Scab": """Apply fungicide at early leaf stage.
-Prune infected leaves and fallen debris.
-Keep good air circulation around the plant.""",
+    "Apple Cedar Rust": """### Apple Cedar Rust
+**Management Strategies:**
+- Remove nearby cedar or juniper hosts if possible.
+- Prune affected leaves and branches.
+- Use protective fungicide in early season.
+- Improve air circulation around the plant.
+- Remove fallen infected leaves and destroy them.
+- Monitor new leaves regularly for early symptoms.""",
 
-    "Apple Black Rot": """Remove infected fruits, leaves, and branches.
-Prune dead wood and sanitize tools.
-Use recommended fungicide if infection is severe.""",
+    "Tomato Bacterial Spot": """### Tomato Bacterial Spot
+**Management Strategies:**
+- Remove infected leaves immediately.
+- Avoid splashing water on leaves during irrigation.
+- Use copper-based bactericide if needed.
+- Keep proper spacing between plants.
+- Do not handle healthy plants after touching infected leaves without washing hands.
+- Remove plant debris from the soil surface.""",
 
-    "Apple Cedar Rust": """Remove nearby cedar/juniper hosts if possible.
-Prune affected leaves and branches.
-Use protective fungicide in early season.""",
+    "Pepper Bell Bacterial Spot": """### Pepper Bell Bacterial Spot
+**Management Strategies:**
+- Remove affected leaves.
+- Avoid overhead watering.
+- Use copper-based spray if recommended.
+- Maintain field sanitation.
+- Improve airflow around the crop.
+- Monitor nearby plants for spread.""",
 
-    "Apple Healthy": """The leaf appears healthy.
+    "Potato Early Blight": """### Potato Early Blight
+**Management Strategies:**
+- Remove affected leaves.
+- Apply fungicide if spread increases.
+- Rotate crops and avoid repeated planting in same soil.
+- Keep the soil mulched to reduce splash infection.
+- Water at the base of the plant.
+- Remove infected debris after harvest.""",
+
+    "Potato Late Blight": """### Potato Late Blight
+**Management Strategies:**
+- Remove infected leaves immediately.
+- Avoid leaf wetness.
+- Use late blight fungicide if needed.
+- Keep plants well spaced for airflow.
+- Destroy severely infected plants.
+- Do not compost infected material.""",
+
+    "Tomato Early Blight": """### Tomato Early Blight
+**Management Strategies:**
+- Remove lower infected leaves.
+- Use fungicide if spread continues.
+- Rotate crops and mulch the soil.
+- Avoid overhead irrigation.
+- Keep leaves dry as much as possible.
+- Remove plant debris after harvest.""",
+
+    "Tomato Late Blight": """### Tomato Late Blight
+**Management Strategies:**
+- Remove infected leaves quickly.
+- Do not overhead water.
+- Use late blight fungicide immediately if needed.
+- Destroy severely infected plants.
+- Improve airflow and reduce humidity.
+- Clean fallen infected material from the area.""",
+
+    "Tomato Mosaic Virus": """### Tomato Mosaic Virus
+**Management Strategies:**
+- Remove infected plants.
+- Sanitize hands and tools.
+- Avoid handling healthy plants after infected ones.
+- Do not reuse contaminated tools without cleaning.
+- Control plant stress through proper nutrition.
+- Use clean seeds and resistant varieties if available.""",
+
+    "Tomato Yellow Leaf Curl Virus": """### Tomato Yellow Leaf Curl Virus
+**Management Strategies:**
+- Remove severely infected plants.
+- Control whiteflies.
+- Use resistant varieties if possible.
+- Keep the field weed-free.
+- Monitor surrounding plants regularly.
+- Use insect nets or barriers where possible.""",
+
+    "Apple Scab": """### Apple Scab
+**Management Strategies:**
+- Apply fungicide at early leaf stage.
+- Prune infected leaves and fallen debris.
+- Keep good air circulation around the plant.
+- Avoid overhead watering.
+- Remove fallen leaves from the ground.
+- Inspect new foliage regularly.""",
+
+    "Apple Black Rot": """### Apple Black Rot
+**Management Strategies:**
+- Remove infected fruits, leaves, and branches.
+- Prune dead wood and sanitize tools.
+- Use recommended fungicide if needed.
+- Destroy infected debris.
+- Improve sunlight and airflow in the canopy.
+- Regularly inspect fruits and stems for symptoms.""",
+
+    "Plant is Healthy": """The leaf appears healthy.
 No treatment is needed.
 Maintain proper watering and nutrition.""",
-
-    "Blueberry Healthy": """The leaf appears healthy.
-No treatment is needed.
-Maintain proper watering and nutrition.""",
-
-    "Cherry Powdery Mildew": """Remove infected leaves.
-Improve airflow and avoid overhead watering.
-Use sulfur or recommended fungicide if needed.""",
-
-    "Cherry Healthy": """The leaf appears healthy.
-No treatment is needed.
-Maintain proper watering and nutrition.""",
-
-    "Corn Cercospora Leaf Spot Gray Leaf Spot": """Remove infected leaves if possible.
-Avoid leaf wetness for long periods.
-Use disease-resistant variety and fungicide if severe.""",
-
-    "Corn Common Rust": """Monitor leaf pustules regularly.
-Use resistant varieties where possible.
-Apply fungicide if infection spreads rapidly.""",
-
-    "Corn Northern Leaf Blight": """Remove infected crop debris.
-Use resistant seeds.
-Apply recommended fungicide if disease is severe.""",
-
-    "Corn Healthy": """The leaf appears healthy.
-No treatment is needed.
-Maintain proper watering and nutrition.""",
-
-    "Grape Black Rot": """Remove infected leaves and fruits.
-Prune the canopy for airflow.
-Use recommended fungicide preventively.""",
-
-    "Grape Esca Black Measles": """Prune infected parts carefully.
-Avoid plant stress from drought or poor nutrition.
-Consult an agricultural expert for vineyard-level management.""",
-
-    "Grape Leaf Blight Isariopsis Leaf Spot": """Remove infected leaves.
-Avoid overhead watering.
-Use proper fungicide if needed.""",
-
-    "Grape Healthy": """The leaf appears healthy.
-No treatment is needed.
-Maintain proper watering and nutrition.""",
-
-    "Orange Haunglongbing Citrus Greening": """Remove severely infected trees if confirmed.
-Control psyllid insect vectors.
-Consult local agricultural authority immediately.""",
-
-    "Peach Bacterial Spot": """Remove infected leaves and twigs.
-Avoid overhead watering.
-Use copper-based spray if recommended locally.""",
-
-    "Peach Healthy": """The leaf appears healthy.
-No treatment is needed.
-Maintain proper watering and nutrition.""",
-
-    "Pepper Bell Bacterial Spot": """Remove infected leaves.
-Avoid splashing water on leaves.
-Use copper-based bactericide if needed.""",
-
-    "Pepper Bell Healthy": """The leaf appears healthy.
-No treatment is needed.
-Maintain proper watering and nutrition.""",
-
-    "Potato Early Blight": """Remove affected leaves.
-Apply fungicide if spread increases.
-Rotate crops and avoid planting potatoes repeatedly in same soil.""",
-
-    "Potato Late Blight": """Remove infected leaves immediately.
-Avoid leaf wetness and improve airflow.
-Use late blight fungicide urgently if disease spreads.""",
-
-    "Potato Healthy": """The leaf appears healthy.
-No treatment is needed.
-Maintain proper watering and nutrition.""",
-
-    "Raspberry Healthy": """The leaf appears healthy.
-No treatment is needed.
-Maintain proper watering and nutrition.""",
-
-    "Soybean Healthy": """The leaf appears healthy.
-No treatment is needed.
-Maintain proper watering and nutrition.""",
-
-    "Squash Powdery Mildew": """Remove infected leaves.
-Improve air circulation.
-Use sulfur or recommended fungicide if needed.""",
-
-    "Strawberry Leaf Scorch": """Remove infected leaves.
-Avoid overhead watering.
-Use fungicide if disease spreads significantly.""",
-
-    "Strawberry Healthy": """The leaf appears healthy.
-No treatment is needed.
-Maintain proper watering and nutrition.""",
-
-    "Tomato Bacterial Spot": """Remove infected leaves.
-Avoid wetting leaves during irrigation.
-Use copper-based spray if recommended.""",
-
-    "Tomato Early Blight": """Remove lower infected leaves.
-Use fungicide if spread continues.
-Rotate crops and mulch the soil.""",
-
-    "Tomato Late Blight": """Remove infected leaves quickly.
+ "Tomato Late Blight": """Remove infected leaves quickly.
 Do not overhead water.
 Use late blight fungicide immediately if needed.""",
 
