@@ -207,12 +207,12 @@ def normalize_label(label: str) -> str:
     return label.title()
 
 
-def get_offline_remedy(label):
-    remedies = {
-        "Apple Cedar Rust": "Remove nearby cedar/juniper hosts...",
-        "Tomato Bacterial Spot": "Use copper-based bactericide..."
-    }
-    return remedies.get(label, "No remedy available.")
+def get_offline_remedy(label: str) -> str:
+    return REMEDY_DB.get(
+        label,
+        "General plant care: remove infected leaves, avoid overwatering, improve airflow, and consult an agricultural expert if symptoms continue."
+    )
+    
 
 
 def workflow(image: Image.Image):
@@ -224,13 +224,24 @@ def workflow(image: Image.Image):
 
         print(f"[INFO] classifier confidence: {confidence:.4f}", flush=True)
 
-        # Healthy fallback for low-confidence cases
-        if confidence<0.75:
-            return("Uncertain","Image unclear.")
-        if "healthy" in classifier_label.lower() and confidence >= 0.80:
-            return ("Plant is Healthy","No treatment required.")
+        # Healthy fallback for weak predictions
+        if confidence < 0.55:
+            return (
+                "Plant is Healthy",
+                "The leaf appears healthy or the model is not confident enough. No treatment is recommended unless visible symptoms are present."
+            )
+
+        # If model explicitly predicts healthy
+        if "healthy" in classifier_label.lower():
+            return (
+                "Plant is Healthy",
+                "The leaf appears healthy. No treatment is needed."
+            )
+
+        # Otherwise always return model prediction with offline remedy
         remedy = get_offline_remedy(classifier_label)
-        return(classifier_label,remedy)
+        return classifier_label, remedy
+
     except Exception as e:
         print("[ERROR] Workflow failed:", e, flush=True)
         traceback.print_exc()
