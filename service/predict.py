@@ -224,20 +224,17 @@ def workflow(image: Image.Image):
         print(f"[INFO] classifier confidence: {confidence:.4f}", flush=True)
 
         # Healthy fallback for low-confidence cases
-        if confidence < 0.70:
-            return (
-                "Plant is Healthy",
-                "The leaf appears healthy or the model is not confident enough. No treatment is recommended unless visible symptoms are present."
+        if confidence <0.75:
+            return(
+                "Uncertain",
+                "Image unclear or model confidence is low. Please upload a clear single-leaf image."
             )
-
-        if "Healthy" in classifier_label:
-            return (
-                "Plant is Healthy",
-                "The leaf appears healthy. No treatment is needed."
+        if "healthy" in classifier_label.lower() and confidence >=0.80:
+            return(
+                "Plant is healthy",
+                "No tretement required."
             )
-
-        remedy = get_offline_remedy(classifier_label)
-        return classifier_label, remedy
+        
 
     except Exception as e:
         print("[ERROR] Workflow failed:", e, flush=True)
