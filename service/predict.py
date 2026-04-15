@@ -28,7 +28,7 @@ def classify_disease(image_tensor):
         raise RuntimeError("Classification model failed to load. Check server logs.")
 
     with torch.no_grad():
-        # Try actual backbone first
+
         model_to_run = CLF_MODEL.model if hasattr(CLF_MODEL, "model") else CLF_MODEL
         outputs = model_to_run(image_tensor)
 
@@ -39,13 +39,14 @@ def classify_disease(image_tensor):
         for i in range(5):
             idx = top_indices[0][i].item()
             prob = top_probs[0][i].item()
-            print(f"{i+1}. {idx} -> {ServiceConfig.ID2LABEL[idx]} ({prob:.4f})", flush=True)
+            print(f"{i+1}. {ServiceConfig.ID2LABEL[idx]} -> {prob:.4f}", flush=True)
 
-        prediction = top_indices[0][0].item()
-        confidence = top_probs[0][0].item()
-        print(f"FINAL PREDICTION: {ServiceConfig.ID2LABEL[prediction]} ({confidence:.4f})", flush=True)
+        pred_idx = top_indices[0][0].item()
+        pred_prob = top_probs[0][0].item()
 
-    return ServiceConfig.ID2LABEL[prediction], confidence
+        label = ServiceConfig.ID2LABEL[pred_idx]
+
+        return label, pred_prob
 
 
 
@@ -112,19 +113,29 @@ def workflow(image: Image.Image):
     try:
         image_tensor = transform_for_prediction(image).unsqueeze(0)
 
-        # ✅ Step 1: classifier prediction
+        # 🔥 Step 1: classifier prediction
         classifier_label, confidence = classify_disease(image_tensor)
         print(f"[INFO] classifier confidence: {confidence:.4f}", flush=True)
 
         classifier_label = normalize_label(classifier_label)
 
+        # 🚨 LOW CONFIDENCE CASE
+        if confidence < 0.70:
+            return (
+                "Uncertain",
+                f"Model confidence is low ({confidence:.2f}). Please upload a clearer leaf image with plain background."
+            )
+
+        # ✅ HEALTHY CASE
         if 'Healthy' in classifier_label:
-            classifier_label = 'Plant is Healthy'
+            return (
+                classifier_label,
+                "The leaf appears healthy. No treatment is needed."
+            )
 
-
-
+        # 🤖 Gemini (optional)
         try:
-            # ✅ Gemini call using the classifier label for remedies
+
             remedy = llm_strategy(
                 ServiceConfig.LLM_MODEL_KEY,
                 classifier_label,
@@ -134,23 +145,20 @@ def workflow(image: Image.Image):
             if not isinstance(remedy, str):
                 raise ValueError("Invalid Gemini response")
 
-
-
-            disease_name = classifier_label
-            remedy = clean_remedy_text(remedy.strip(), disease_name)
+            remedy = clean_remedy_text(remedy.strip(), classifier_label)
 
             if not remedy:
                 raise ValueError("Empty remedy")
 
         except Exception as e:
-            print("[ERROR] LLM failed:", e)
+            print("[ERROR] LLM failed:", e, flush=True)
             traceback.print_exc()
-            disease_name = classifier_label
+            
             remedy = "Consult an agricultural expert for proper treatment."
 
-        return disease_name, remedy
+        return classifier_label, remedy
 
     except Exception as e:
-        print("[ERROR] Workflow failed:", e)
+        print("[ERROR] Workflow failed:", e, flush=True)
         traceback.print_exc()
         return "Error", f"An error occurred: {str(e)}"
