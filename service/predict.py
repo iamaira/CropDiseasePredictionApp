@@ -219,6 +219,12 @@ def workflow(image: Image.Image):
         image_tensor = transform_for_prediction(image).unsqueeze(0)
 
         classifier_label, confidence = classify_disease(image_tensor)
+        if confidence <0.75:
+            return(
+                "Plant is healthy",
+                "The leaf appears healthy. No treatment needed."
+            )
+
         classifier_label = normalize_label(classifier_label)
 
         print(f"[INFO] classifier confidence: {confidence:.4f}", flush=True)
