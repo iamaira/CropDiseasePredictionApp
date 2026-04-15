@@ -17,11 +17,14 @@
         <h2 style="color:red;">Error: {{ error }}</h2>
     {% elif prediction %}
         <h2>Prediction: {{ prediction }}</h2>
-        <div style="white-space: pre-wrap; text-align:left; display:inline-block; max-width:900px; margin-top:20px;">
-            <strong>Treatment:</strong>
-            <br>
-            Status: {{ treatment }}
-        </div>
+       {% elif prediction %}
+<h2>Prediction: {{ prediction }}</h2>
+
+<div style="white-space: pre-wrap; text-align:left; display:inline-block;">
+    <strong>Status:</strong><br>
+    {{ treatment }}
+</div>
+{% endif %}
     {% endif %}
 
 </body>
