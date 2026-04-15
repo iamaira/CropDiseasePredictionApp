@@ -1,9 +1,6 @@
 from PIL import Image
-
 import torch
-
 import torchvision.transforms.functional as F
-
 import traceback
 
 from acfg.modelconfig import ModelConfig
@@ -13,7 +10,7 @@ from service.external import llm_strategy
 
 def transform_for_prediction(img: Image.Image):
     img = img.convert("RGB")
-    z = F.resize(img, [224, 224])
+    z = F.resize(img, [ModelConfig.IMG_SIZE, ModelConfig.IMG_SIZE])
     z = F.to_tensor(z)
     z = F.normalize(
         z,
@@ -28,7 +25,6 @@ def classify_disease(image_tensor):
         raise RuntimeError("Classification model failed to load. Check server logs.")
 
     with torch.no_grad():
-
         model_to_run = CLF_MODEL.model if hasattr(CLF_MODEL, "model") else CLF_MODEL
         outputs = model_to_run(image_tensor)
 
@@ -43,15 +39,13 @@ def classify_disease(image_tensor):
 
         pred_idx = top_indices[0][0].item()
         pred_prob = top_probs[0][0].item()
-
         label = ServiceConfig.ID2LABEL[pred_idx]
 
+        print(f"FINAL PREDICTION: {label} ({pred_prob:.4f})", flush=True)
         return label, pred_prob
 
 
-
 def normalize_label(label: str) -> str:
-
     if not isinstance(label, str):
         label = str(label)
     label = label.replace("__", " ").strip()
@@ -68,27 +62,16 @@ def clean_remedy_text(remedy: str, disease_name: str) -> str:
 
     for line in lines:
         lower_line = line.lower()
-        # Remove heading lines and explicit disease labels
+
         if lower_line.startswith("###"):
             continue
-        if lower_line.startswith("disease:") or lower_line.startswith("**disease name:"):
-            continue
-        if lower_line.startswith("### remedy for"):
+        if lower_line.startswith("disease:"):
             continue
         if lower_line.startswith("remedy for"):
             continue
 
-        # Normalize leading markdown before checking the disease name
-        stripped_line = line.lstrip('* ').strip()
-        stripped_lower = stripped_line.lower()
-        if stripped_lower.startswith(f"{disease_name.lower()}"):
-            stripped_line = stripped_line[len(disease_name):].strip(" :-*")
-            if not stripped_line:
-                continue
-            line = stripped_line
-
-        line = line.replace("**", "")
-        cleaned_lines.append(line)
+        stripped = line.replace("**", "").strip()
+        cleaned_lines.append(stripped)
 
     if not cleaned_lines:
         return remedy.strip()
@@ -113,29 +96,37 @@ def workflow(image: Image.Image):
     try:
         image_tensor = transform_for_prediction(image).unsqueeze(0)
 
-        # 🔥 Step 1: classifier prediction
-        classifier_label, confidence = classify_disease(image_tensor)
-        print(f"[INFO] classifier confidence: {confidence:.4f}", flush=True)
+        is_ood, ood_score = detect_out_of_distribution(image_tensor)
+        if is_ood:
+            return (
+                "Uncertain",
+                f"This image does not look like a supported clear leaf sample. OOD score: {ood_score:.4f}. Please upload a clearer single-leaf image with plain background."
+            )
 
+        classifier_label, confidence = classify_disease(image_tensor)
         classifier_label = normalize_label(classifier_label)
 
-        # 🚨 LOW CONFIDENCE CASE
-        if confidence < 0.70:
+        print(f"[INFO] classifier confidence: {confidence:.4f}", flush=True)
+
+        # Smart decision logic
+        if confidence < 0.80:
+            if confidence > 0.55:
+                return (
+                    "Plant is Healthy",
+                    "The leaf appears healthy. No treatment needed."
+                )
             return (
                 "Uncertain",
                 f"Model confidence is low ({confidence:.2f}). Please upload a clearer leaf image with plain background."
             )
 
-        # ✅ HEALTHY CASE
-        if 'Healthy' in classifier_label:
+        if "Healthy" in classifier_label:
             return (
                 classifier_label,
-                "The leaf appears healthy. No treatment is needed."
+                "The leaf appears healthy. No treatment needed."
             )
 
-        # 🤖 Gemini (optional)
         try:
-
             remedy = llm_strategy(
                 ServiceConfig.LLM_MODEL_KEY,
                 classifier_label,
@@ -153,7 +144,6 @@ def workflow(image: Image.Image):
         except Exception as e:
             print("[ERROR] LLM failed:", e, flush=True)
             traceback.print_exc()
-            
             remedy = "Consult an agricultural expert for proper treatment."
 
         return classifier_label, remedy
