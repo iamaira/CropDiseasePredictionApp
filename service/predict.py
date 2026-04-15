@@ -96,12 +96,7 @@ def workflow(image: Image.Image):
     try:
         image_tensor = transform_for_prediction(image).unsqueeze(0)
 
-        is_ood, ood_score = detect_out_of_distribution(image_tensor)
-        if is_ood:
-            return (
-                "Uncertain",
-                f"This image does not look like a supported clear leaf sample. OOD score: {ood_score:.4f}. Please upload a clearer single-leaf image with plain background."
-            )
+        
 
         classifier_label, confidence = classify_disease(image_tensor)
         classifier_label = normalize_label(classifier_label)
