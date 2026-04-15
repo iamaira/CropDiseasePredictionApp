@@ -5,7 +5,6 @@ import traceback
 
 from acfg.modelconfig import ModelConfig
 from acfg.appconfig import CLF_MODEL, OOD_MODEL, ServiceConfig, get_device
-from service.external import llm_strategy
 
 
 def transform_for_prediction(img: Image.Image):
@@ -53,32 +52,6 @@ def normalize_label(label: str) -> str:
     return label.title()
 
 
-def clean_remedy_text(remedy: str, disease_name: str) -> str:
-    if not isinstance(remedy, str):
-        remedy = str(remedy)
-
-    lines = [line.strip() for line in remedy.splitlines() if line.strip()]
-    cleaned_lines = []
-
-    for line in lines:
-        lower_line = line.lower()
-
-        if lower_line.startswith("###"):
-            continue
-        if lower_line.startswith("disease:"):
-            continue
-        if lower_line.startswith("remedy for"):
-            continue
-
-        stripped = line.replace("**", "").strip()
-        cleaned_lines.append(stripped)
-
-    if not cleaned_lines:
-        return remedy.strip()
-
-    return "\n".join(cleaned_lines).strip()
-
-
 def detect_out_of_distribution(image_tensor: torch.Tensor):
     if OOD_MODEL is None:
         return False, None
@@ -101,38 +74,22 @@ def workflow(image: Image.Image):
 
         print(f"[INFO] classifier confidence: {confidence:.4f}", flush=True)
 
-        if confidence < 0.60:
-           return(
-               "Uncertain",
-               f"Model confidence is low ({confidence:.2f}).please upload a clearer single-leaf image with plain background."
-           )
-        if "Healthy" in classifier_label and confidence >= 0.60:
-            return(
-                classifier_label,
-                "The leaf appears healthy. No treatment needed."
-            )
-        
-        try:
-            remedy = llm_strategy(
-                ServiceConfig.LLM_MODEL_KEY,
-                classifier_label,
-                return_both=False
+        if confidence < 0.75:
+            return (
+                "Uncertain",
+                f"Model confidence is low ({confidence:.2f}). Please upload a clearer single-leaf image with plain background."
             )
 
-            if not isinstance(remedy, str):
-                raise ValueError("Invalid Gemini response")
+        if "Healthy" in classifier_label and confidence >= 0.75:
+            return (
+                classifier_label,
+                "The leaf appears healthy. No treatment is needed."
+            )
 
-            remedy = clean_remedy_text(remedy.strip(), classifier_label)
-
-            if not remedy:
-                raise ValueError("Empty remedy")
-
-        except Exception as e:
-            print("[ERROR] LLM failed:", e, flush=True)
-            traceback.print_exc()
-            remedy = "Consult an agricultural expert for proper treatment."
-
-        return classifier_label, remedy
+        return (
+            classifier_label,
+            f"Detected disease: {classifier_label}. Remedy generation is temporarily disabled."
+        )
 
     except Exception as e:
         print("[ERROR] Workflow failed:", e, flush=True)
