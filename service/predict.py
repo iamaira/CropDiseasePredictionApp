@@ -4,7 +4,162 @@ import torchvision.transforms.functional as F
 import traceback
 
 from acfg.modelconfig import ModelConfig
-from acfg.appconfig import CLF_MODEL, OOD_MODEL, ServiceConfig, get_device
+from acfg.appconfig import CLF_MODEL, ServiceConfig, get_device
+
+
+REMEDY_DB = {
+    "Apple Scab": """Apply fungicide at early leaf stage.
+Prune infected leaves and fallen debris.
+Keep good air circulation around the plant.""",
+
+    "Apple Black Rot": """Remove infected fruits, leaves, and branches.
+Prune dead wood and sanitize tools.
+Use recommended fungicide if infection is severe.""",
+
+    "Apple Cedar Rust": """Remove nearby cedar/juniper hosts if possible.
+Prune affected leaves and branches.
+Use protective fungicide in early season.""",
+
+    "Apple Healthy": """The leaf appears healthy.
+No treatment is needed.
+Maintain proper watering and nutrition.""",
+
+    "Blueberry Healthy": """The leaf appears healthy.
+No treatment is needed.
+Maintain proper watering and nutrition.""",
+
+    "Cherry Powdery Mildew": """Remove infected leaves.
+Improve airflow and avoid overhead watering.
+Use sulfur or recommended fungicide if needed.""",
+
+    "Cherry Healthy": """The leaf appears healthy.
+No treatment is needed.
+Maintain proper watering and nutrition.""",
+
+    "Corn Cercospora Leaf Spot Gray Leaf Spot": """Remove infected leaves if possible.
+Avoid leaf wetness for long periods.
+Use disease-resistant variety and fungicide if severe.""",
+
+    "Corn Common Rust": """Monitor leaf pustules regularly.
+Use resistant varieties where possible.
+Apply fungicide if infection spreads rapidly.""",
+
+    "Corn Northern Leaf Blight": """Remove infected crop debris.
+Use resistant seeds.
+Apply recommended fungicide if disease is severe.""",
+
+    "Corn Healthy": """The leaf appears healthy.
+No treatment is needed.
+Maintain proper watering and nutrition.""",
+
+    "Grape Black Rot": """Remove infected leaves and fruits.
+Prune the canopy for airflow.
+Use recommended fungicide preventively.""",
+
+    "Grape Esca Black Measles": """Prune infected parts carefully.
+Avoid plant stress from drought or poor nutrition.
+Consult an agricultural expert for vineyard-level management.""",
+
+    "Grape Leaf Blight Isariopsis Leaf Spot": """Remove infected leaves.
+Avoid overhead watering.
+Use proper fungicide if needed.""",
+
+    "Grape Healthy": """The leaf appears healthy.
+No treatment is needed.
+Maintain proper watering and nutrition.""",
+
+    "Orange Haunglongbing Citrus Greening": """Remove severely infected trees if confirmed.
+Control psyllid insect vectors.
+Consult local agricultural authority immediately.""",
+
+    "Peach Bacterial Spot": """Remove infected leaves and twigs.
+Avoid overhead watering.
+Use copper-based spray if recommended locally.""",
+
+    "Peach Healthy": """The leaf appears healthy.
+No treatment is needed.
+Maintain proper watering and nutrition.""",
+
+    "Pepper Bell Bacterial Spot": """Remove infected leaves.
+Avoid splashing water on leaves.
+Use copper-based bactericide if needed.""",
+
+    "Pepper Bell Healthy": """The leaf appears healthy.
+No treatment is needed.
+Maintain proper watering and nutrition.""",
+
+    "Potato Early Blight": """Remove affected leaves.
+Apply fungicide if spread increases.
+Rotate crops and avoid planting potatoes repeatedly in same soil.""",
+
+    "Potato Late Blight": """Remove infected leaves immediately.
+Avoid leaf wetness and improve airflow.
+Use late blight fungicide urgently if disease spreads.""",
+
+    "Potato Healthy": """The leaf appears healthy.
+No treatment is needed.
+Maintain proper watering and nutrition.""",
+
+    "Raspberry Healthy": """The leaf appears healthy.
+No treatment is needed.
+Maintain proper watering and nutrition.""",
+
+    "Soybean Healthy": """The leaf appears healthy.
+No treatment is needed.
+Maintain proper watering and nutrition.""",
+
+    "Squash Powdery Mildew": """Remove infected leaves.
+Improve air circulation.
+Use sulfur or recommended fungicide if needed.""",
+
+    "Strawberry Leaf Scorch": """Remove infected leaves.
+Avoid overhead watering.
+Use fungicide if disease spreads significantly.""",
+
+    "Strawberry Healthy": """The leaf appears healthy.
+No treatment is needed.
+Maintain proper watering and nutrition.""",
+
+    "Tomato Bacterial Spot": """Remove infected leaves.
+Avoid wetting leaves during irrigation.
+Use copper-based spray if recommended.""",
+
+    "Tomato Early Blight": """Remove lower infected leaves.
+Use fungicide if spread continues.
+Rotate crops and mulch the soil.""",
+
+    "Tomato Late Blight": """Remove infected leaves quickly.
+Do not overhead water.
+Use late blight fungicide immediately if needed.""",
+
+    "Tomato Leaf Mold": """Improve ventilation around plants.
+Avoid high humidity.
+Use fungicide if disease spreads.""",
+
+    "Tomato Septoria Leaf Spot": """Remove infected lower leaves.
+Avoid splashing soil onto leaves.
+Use fungicide if infection progresses.""",
+
+    "Tomato Spider Mites Two Spotted Spider Mite": """Spray water under leaves to reduce mites.
+Use neem oil or miticide if needed.
+Remove heavily infested leaves.""",
+
+    "Tomato Target Spot": """Remove infected leaves.
+Improve airflow and reduce humidity.
+Use appropriate fungicide if needed.""",
+
+    "Tomato Yellow Leaf Curl Virus": """Remove infected plants if severely affected.
+Control whiteflies.
+Use resistant varieties if possible.""",
+
+    "Tomato Mosaic Virus": """Remove infected plants.
+Sanitize hands and tools.
+Avoid tobacco contact near plants.""",
+
+    "Tomato Healthy": """The leaf appears healthy.
+No treatment is needed.
+Maintain proper watering and nutrition.""",
+}
 
 
 def transform_for_prediction(img: Image.Image):
@@ -13,8 +168,8 @@ def transform_for_prediction(img: Image.Image):
     z = F.to_tensor(z)
     z = F.normalize(
         z,
-        mean=(0.485, 0.456, 0.406),
-        std=(0.229, 0.224, 0.225)
+        mean=ModelConfig.IMG_MEAN,
+        std=ModelConfig.IMG_STD
     )
     return z.to(get_device()[1])
 
@@ -52,17 +207,11 @@ def normalize_label(label: str) -> str:
     return label.title()
 
 
-def detect_out_of_distribution(image_tensor: torch.Tensor):
-    if OOD_MODEL is None:
-        return False, None
-
-    OOD_MODEL.eval()
-    with torch.no_grad():
-        reconstructed = OOD_MODEL(image_tensor)
-        score = torch.mean((reconstructed - image_tensor) ** 2).item()
-
-    print(f"[OOD] score: {score:.6f}", flush=True)
-    return score > ServiceConfig.OOD_THRESHOLD, score
+def get_offline_remedy(label: str) -> str:
+    return REMEDY_DB.get(
+        label,
+        "Prediction available, but no offline remedy is stored for this disease."
+    )
 
 
 def workflow(image: Image.Image):
@@ -74,22 +223,20 @@ def workflow(image: Image.Image):
 
         print(f"[INFO] classifier confidence: {confidence:.4f}", flush=True)
 
-        if confidence < 0.65:
-            return (
-                "Uncertain",
-                f"Model confidence is low ({confidence:.2f}). The current model is not confident enough for a reliable diagnosis."
-            )
-
         if "Healthy" in classifier_label and confidence >= 0.60:
             return (
                 "Plant is Healthy",
                 "The leaf appears healthy. No treatment is needed."
             )
 
-        return (
-            classifier_label,
-            "Prediction available. Disease-specific remedy is currently disabled."
-        )
+        if confidence < 0.60:
+            return (
+                "Uncertain",
+                f"Model confidence is low ({confidence:.2f}). The current model is not confident enough for a reliable diagnosis."
+            )
+
+        remedy = get_offline_remedy(classifier_label)
+        return classifier_label, remedy
 
     except Exception as e:
         print("[ERROR] Workflow failed:", e, flush=True)
