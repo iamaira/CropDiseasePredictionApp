@@ -197,32 +197,35 @@ def get_offline_remedy(label: str) -> str:
     
 
 
-def workflow(image):
+def workflow(image: Image.Image):
     try:
         image_tensor = transform_for_prediction(image).unsqueeze(0)
 
         classifier_label, confidence = classify_disease(image_tensor)
         classifier_label = normalize_label(classifier_label)
 
-        print(f"[INFO] label: {classifier_label}, confidence: {confidence}")
+        print(f"[INFO] classifier label: {classifier_label}", flush=True)
+        print(f"[INFO] classifier confidence: {confidence:.4f}", flush=True)
 
-        # ✅ STEP 1: HEALTHY CHECK FIRST (VERY IMPORTANT)
+        # 1) HEALTHY CASE — isko sabse upar rakho
         if "healthy" in classifier_label.lower():
             return (
                 "Plant is Healthy",
-                "The leaf appears healthy. No treatment is needed."
+                "No treatment is needed."
             )
 
-        # ✅ STEP 2: LOW CONFIDENCE (only for NON-healthy)
+        # 2) Very low confidence only -> uncertain
         if confidence < 0.40:
             return (
                 "Uncertain",
                 "Model is not confident. Please try another image."
             )
 
-        # ✅ STEP 3: NORMAL DISEASE
-        remedy = REMEDY_DB.get(classifier_label, "No remedy found.")
+        # 3) Disease/Bacterial case -> proper remedy
+        remedy = get_offline_remedy(classifier_label)
         return classifier_label, remedy
 
     except Exception as e:
-        return "Error", str(e)
+        print("[ERROR] Workflow failed:", e, flush=True)
+        traceback.print_exc()
+        return "Error", f"An error occurred: {str(e)}"
