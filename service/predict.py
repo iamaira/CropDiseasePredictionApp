@@ -207,24 +207,28 @@ def workflow(image: Image.Image):
         print(f"[INFO] classifier label: {classifier_label}", flush=True)
         print(f"[INFO] classifier confidence: {confidence:.4f}", flush=True)
 
-        if confidence < 0.50:
-            return (
-                "Uncertain",
-                "Image unclear. Please upload a clear single-leaf image."
-            )
-
+        # 1) Healthy sirf tab jab model khud healthy bole
         if "healthy" in classifier_label.lower():
             return (
                 "Plant is Healthy",
                 "The leaf appears healthy. No treatment is needed."
             )
 
+        # 2) Bahut low confidence ho to uncertain
+        if confidence < 0.40:
+            return (
+                "Uncertain",
+                "Model is not confident. Please try another image."
+            )
+
+        # 3) Apple Cedar Rust overprediction control
         if classifier_label == "Apple Cedar Rust" and confidence < 0.85:
             return (
                 "Uncertain",
                 "Model is not confident. Please try another image."
             )
 
+        # 4) Disease case
         remedy = get_offline_remedy(classifier_label)
         return classifier_label, remedy
 
