@@ -229,59 +229,56 @@ def workflow(image: Image.Image):
         top1_label, top1_conf = top3[0]
         top1_label = normalize_label(top1_label)
 
+        # normalize all top3
+        norm_top3 = [(normalize_label(label), prob) for label, prob in top3]
+
         print(f"[INFO] top1 label: {top1_label}", flush=True)
         print(f"[INFO] top1 confidence: {top1_conf:.4f}", flush=True)
 
-        chosen_label = top1_label
-
-        # Find healthy candidate if present
         healthy_candidate = None
-        for label, prob in top3:
-            nlabel = normalize_label(label)
-            if "healthy" in nlabel.lower():
-                healthy_candidate = (nlabel, prob)
-                break
-
-        # Find bacterial candidate if present
         bacterial_candidate = None
-        for label, prob in top3:
-            nlabel = normalize_label(label)
-            if "bacterial" in nlabel.lower():
-                bacterial_candidate = (nlabel, prob)
-                break
 
-        # 1) VERY LOW confidence => uncertain
-        if top1_conf < 0.28:
+        for label, prob in norm_top3:
+            if "healthy" in label.lower():
+                healthy_candidate = (label, prob)
+            if "bacterial" in label.lower():
+                bacterial_candidate = (label, prob)
+
+        # very weak image
+        if top1_conf < 0.25:
             return (
                 "Uncertain",
                 "Model is not confident. Please try another clear leaf image."
             )
 
-        # 2) HEALTHY selection (only if healthy is genuinely competitive)
+        # HEALTHY rescue:
+        # if healthy appears in top3 and is close to top1, choose healthy
         if healthy_candidate is not None:
-            healthy_label, healthy_prob = healthy_candidate
-            if healthy_prob >= 0.40 and (top1_conf - healthy_prob) <= 0.10:
+            h_label, h_prob = healthy_candidate
+            if h_prob >= 0.20 and (top1_conf - h_prob) <= 0.12:
                 return (
                     "Plant is Healthy",
                     "No treatment is needed."
                 )
 
-        # 3) BACTERIAL preference (avoid turning bacterial into healthy)
+        # BACTERIAL rescue:
+        # if bacterial appears in top3 and is close to top1, choose bacterial
         if bacterial_candidate is not None:
-            bacterial_label, bacterial_prob = bacterial_candidate
-            if bacterial_prob >= 0.30 and (top1_conf - bacterial_prob) <= 0.12:
-                chosen_label = bacterial_label
+            b_label, b_prob = bacterial_candidate
+            if b_prob >= 0.20 and (top1_conf - b_prob) <= 0.12:
+                remedy = get_offline_remedy(b_label)
+                return b_label, remedy
 
-        # 4) If model explicitly predicts healthy as top1
-        if "healthy" in chosen_label.lower():
+        # if top1 itself is healthy
+        if "healthy" in top1_label.lower():
             return (
                 "Plant is Healthy",
                 "No treatment is needed."
             )
 
-        # 5) Disease case
-        remedy = get_offline_remedy(chosen_label)
-        return chosen_label, remedy
+        # default disease
+        remedy = get_offline_remedy(top1_label)
+        return top1_label, remedy
 
     except Exception as e:
         print("[ERROR] Workflow failed:", e, flush=True)
