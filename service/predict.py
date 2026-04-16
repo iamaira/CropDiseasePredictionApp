@@ -190,19 +190,20 @@ def classify_disease(image_tensor):
     with torch.no_grad():
         outputs = CLF_MODEL(image_tensor)
         probs = torch.softmax(outputs, dim=1)
-        top_prob, top_idx = torch.max(probs, dim=1)
+        top_probs, top_indices = torch.topk(probs, 3, dim=1)
 
-        prediction = top_idx.item()
-        confidence = top_prob.item()
+        results = []
+        for i in range(3):
+            idx = top_indices[0][i].item()
+            prob = top_probs[0][i].item()
+            label = ServiceConfig.ID2LABEL[idx]
+            results.append((label, prob))
 
-        print("=== TOP PREDICTION ===", flush=True)
-        print(
-            f"{prediction} -> {ServiceConfig.ID2LABEL[prediction]} ({confidence:.4f})",
-            flush=True,
-        )
+        print("=== TOP 3 PREDICTIONS ===", flush=True)
+        for i, (label, prob) in enumerate(results, start=1):
+            print(f"{i}. {label} ({prob:.4f})", flush=True)
 
-    return ServiceConfig.ID2LABEL[prediction], confidence
-
+    return results
 
 def normalize_label(label: str) -> str:
     if not isinstance(label, str):
@@ -223,29 +224,64 @@ def workflow(image: Image.Image):
     try:
         image_tensor = transform_for_prediction(image).unsqueeze(0)
 
-        classifier_label, confidence = classify_disease(image_tensor)
-        classifier_label = normalize_label(classifier_label)
+        top3 = classify_disease(image_tensor)
 
-        print(f"[INFO] classifier label: {classifier_label}", flush=True)
-        print(f"[INFO] classifier confidence: {confidence:.4f}", flush=True)
+        top1_label, top1_conf = top3[0]
+        top1_label = normalize_label(top1_label)
 
-        # Healthy only when model itself predicts healthy
-        if "healthy" in classifier_label.lower():
+        print(f"[INFO] top1 label: {top1_label}", flush=True)
+        print(f"[INFO] top1 confidence: {top1_conf:.4f}", flush=True)
+
+        chosen_label = top1_label
+
+        # Find healthy candidate if present
+        healthy_candidate = None
+        for label, prob in top3:
+            nlabel = normalize_label(label)
+            if "healthy" in nlabel.lower():
+                healthy_candidate = (nlabel, prob)
+                break
+
+        # Find bacterial candidate if present
+        bacterial_candidate = None
+        for label, prob in top3:
+            nlabel = normalize_label(label)
+            if "bacterial" in nlabel.lower():
+                bacterial_candidate = (nlabel, prob)
+                break
+
+        # 1) VERY LOW confidence => uncertain
+        if top1_conf < 0.28:
+            return (
+                "Uncertain",
+                "Model is not confident. Please try another clear leaf image."
+            )
+
+        # 2) HEALTHY selection (only if healthy is genuinely competitive)
+        if healthy_candidate is not None:
+            healthy_label, healthy_prob = healthy_candidate
+            if healthy_prob >= 0.40 and (top1_conf - healthy_prob) <= 0.10:
+                return (
+                    "Plant is Healthy",
+                    "No treatment is needed."
+                )
+
+        # 3) BACTERIAL preference (avoid turning bacterial into healthy)
+        if bacterial_candidate is not None:
+            bacterial_label, bacterial_prob = bacterial_candidate
+            if bacterial_prob >= 0.30 and (top1_conf - bacterial_prob) <= 0.12:
+                chosen_label = bacterial_label
+
+        # 4) If model explicitly predicts healthy as top1
+        if "healthy" in chosen_label.lower():
             return (
                 "Plant is Healthy",
                 "No treatment is needed."
             )
 
-        # Only very low confidence becomes uncertain
-        if confidence < 0.35:
-            return (
-                "Uncertain",
-                "Model is not confident. Please try another image."
-            )
-
-        # Disease / bacterial case
-        remedy = get_offline_remedy(classifier_label)
-        return classifier_label, remedy
+        # 5) Disease case
+        remedy = get_offline_remedy(chosen_label)
+        return chosen_label, remedy
 
     except Exception as e:
         print("[ERROR] Workflow failed:", e, flush=True)
