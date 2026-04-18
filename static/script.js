@@ -24,3 +24,15 @@ if (form) {
         loader.classList.remove("hidden");
     });
 }
+window.addEventListener("load", function () {
+    setTimeout(() => {
+        document.getElementById("welcome-screen").classList.add("hide");
+    }, 2000); // 2 sec delay
+});
+const welcomeScreen = document.getElementById("welcome-screen");
+
+if (welcomeScreen) {
+    welcomeScreen.addEventListener("click", function () {
+        welcomeScreen.classList.add("hide");
+    });
+}
