@@ -15,6 +15,7 @@ def home():
     prediction = None
     treatment = None
     error = None
+    uploaded_image = None
 
     if request.method == "POST":
         file = request.files.get("file")
@@ -23,10 +24,11 @@ def home():
         if file and file.filename != "":
             save_path = os.path.join(UPLOAD_FOLDER, file.filename)
             file.save(save_path)
+            uploaded_image = "/" + save_path.replace("\\", "/")
 
             try:
                 img = Image.open(save_path).convert("RGB")
-
+                
                 result = workflow(img)
 
                 if result is None:
@@ -55,7 +57,14 @@ def home():
         prediction=prediction,
         treatment=treatment,
         error=error,
+        uploaded_image=uploaded_image,
     )
+
+
+@app.route("/uploads/<path:filename>")
+def uploaded_file(filename):
+    from flask import send_from_directory
+    return send_from_directory(UPLOAD_FOLDER, filename)
 
 
 if __name__ == "__main__":
