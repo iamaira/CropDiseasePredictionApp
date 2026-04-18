@@ -36,3 +36,10 @@ if (welcomeScreen) {
         welcomeScreen.classList.add("hide");
     });
 }
+const welcomeScreen = document.getElementById("welcome-screen");
+
+if (welcomeScreen) {
+    welcomeScreen.addEventListener("click", function () {
+        welcomeScreen.classList.add("hide");
+    });
+}
