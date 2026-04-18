@@ -3,6 +3,7 @@ const previewBox = document.getElementById("previewBox");
 const previewImage = document.getElementById("previewImage");
 const form = document.getElementById("predictForm");
 const loader = document.getElementById("loaderOverlay");
+const welcomeScreen = document.getElementById("welcome-screen");
 
 if (fileInput) {
     fileInput.addEventListener("change", function () {
@@ -21,18 +22,11 @@ if (fileInput) {
 
 if (form) {
     form.addEventListener("submit", function () {
-        loader.classList.remove("hidden");
+        if (loader) {
+            loader.classList.remove("hidden");
+        }
     });
 }
-window.addEventListener("load", function () {
-    setTimeout(() => {
-        document.getElementById("welcome-screen").classList.add("hide");
-    }, 2000); // 2 sec delay
-});
-
-
-
-const welcomeScreen = document.getElementById("welcome-screen");
 
 if (welcomeScreen) {
     welcomeScreen.addEventListener("click", function () {
