@@ -5,6 +5,7 @@ const form = document.getElementById("predictForm");
 const loader = document.getElementById("loaderOverlay");
 const welcomeScreen = document.getElementById("welcome-screen");
 
+// Image preview
 if (fileInput) {
     fileInput.addEventListener("change", function () {
         const file = this.files[0];
@@ -20,6 +21,7 @@ if (fileInput) {
     });
 }
 
+// Show loader on submit
 if (form) {
     form.addEventListener("submit", function () {
         if (loader) {
@@ -28,8 +30,18 @@ if (form) {
     });
 }
 
+// Welcome screen logic
 if (welcomeScreen) {
-    welcomeScreen.addEventListener("click", function () {
+    const alreadyStarted = sessionStorage.getItem("welcomeShown");
+
+    // Agar pehle click ho chuka hai, to welcome screen hide rakho
+    if (alreadyStarted === "true") {
         welcomeScreen.classList.add("hide");
-    });
+    } else {
+        // First time click pe hide karo aur session me save karo
+        welcomeScreen.addEventListener("click", function () {
+            welcomeScreen.classList.add("hide");
+            sessionStorage.setItem("welcomeShown", "true");
+        });
+    }
 }
