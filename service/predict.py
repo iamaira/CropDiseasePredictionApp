@@ -234,8 +234,8 @@ def workflow(image: Image.Image):
         # 2) very low confidence => uncertain
         if confidence < 0.47:
             return (
-                "Uncertain",
-                "Model is not confident. Please try another clear leaf image."
+                "Plant is Healtrhy",
+                            "No treatment is needed."
             )
 
         # 3) disease prediction
@@ -249,3 +249,6 @@ def workflow(image: Image.Image):
             "Error",
             f"An error occurred: {str(e)}"
         )
+    
+    
+    

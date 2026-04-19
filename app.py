@@ -28,8 +28,7 @@ def home():
 
             try:
                 img = Image.open(save_path).convert("RGB")
-                
-                result = workflow(img)
+                result = workflow(img, file.filename)
 
                 if result is None:
                     prediction = "Error"
