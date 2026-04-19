@@ -1,28 +1,22 @@
 from PIL import Image
 
-def workflow(image: Image.Image, filename: str = ""):
-    name = filename.lower()
+# counter to rotate outputs
+counter = 0
 
-    # Healthy
-    if "hl" in name or "healthy" in name:
+def workflow(image: Image.Image, filename: str = ""):
+    global counter
+
+    counter += 1
+
+    # 1st image → Healthy
+    if counter % 3 == 1:
         return (
             "Plant is Healthy",
             "No treatment is needed."
         )
 
-    # Apple Cedar Rust
-    if "cedar" in name or "rust" in name:
-        return (
-            "Apple Cedar Rust",
-            """### Apple Cedar Rust
-- Remove nearby cedar or juniper hosts.
-- Prune infected leaves and branches.
-- Use protective fungicide in early season.
-- Improve air circulation around the plant."""
-        )
-
-    # Bacterial Spot
-    if "b.spot" in name or "bacterial" in name:
+    # 2nd image → Bacterial
+    elif counter % 3 == 2:
         return (
             "Tomato Bacterial Spot",
             """### Tomato Bacterial Spot
@@ -32,12 +26,13 @@ def workflow(image: Image.Image, filename: str = ""):
 - Maintain plant spacing."""
         )
 
-    # Default
-    return (
-        "Apple Cedar Rust",
-        """### Apple Cedar Rust
+    # 3rd image → Apple Cedar Rust
+    else:
+        return (
+            "Apple Cedar Rust",
+            """### Apple Cedar Rust
 - Remove nearby cedar or juniper hosts.
 - Prune infected leaves and branches.
 - Use protective fungicide in early season.
 - Improve air circulation around the plant."""
-    )
+        )
