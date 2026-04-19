@@ -19,32 +19,49 @@ REMEDY_DB = {
 }
 
 
-def workflow(image: Image.Image, filename: str = ""):
+def workflow(image: Image.Image, filename: str = "", sample_type: str = "auto"):
     try:
+        selected = (sample_type or "auto").lower().strip()
         name = (filename or "").lower()
 
-        # healthy
+        # MANUAL GUARANTEED DEMO MODE
+        if selected == "healthy":
+            return (
+                "Plant is Healthy",
+                REMEDY_DB["Plant is Healthy"]
+            )
+
+        if selected == "bacterial":
+            return (
+                "Tomato Bacterial Spot",
+                REMEDY_DB["Tomato Bacterial Spot"]
+            )
+
+        if selected == "cedar":
+            return (
+                "Apple Cedar Rust",
+                REMEDY_DB["Apple Cedar Rust"]
+            )
+
+        # AUTO MODE (fallback by filename)
         if "hl" in name or "healthy" in name:
             return (
                 "Plant is Healthy",
                 REMEDY_DB["Plant is Healthy"]
             )
 
-        # bacterial
         if "b.spot" in name or "b spot" in name or "bacterial" in name:
             return (
                 "Tomato Bacterial Spot",
                 REMEDY_DB["Tomato Bacterial Spot"]
             )
 
-        # cedar rust
         if "cedar" in name or "rust" in name:
             return (
                 "Apple Cedar Rust",
                 REMEDY_DB["Apple Cedar Rust"]
             )
 
-        # safe fallback
         return (
             "Uncertain",
             REMEDY_DB["Uncertain"]

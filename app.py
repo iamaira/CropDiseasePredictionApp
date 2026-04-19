@@ -19,7 +19,12 @@ def home():
 
     if request.method == "POST":
         file = request.files.get("file")
-        print(f"[INFO] POST received, file={getattr(file, 'filename', None)}", flush=True)
+        sample_type = request.form.get("sample_type", "auto")
+
+        print(
+            f"[INFO] POST received, file={getattr(file, 'filename', None)}, sample_type={sample_type}",
+            flush=True
+        )
 
         if file and file.filename != "":
             save_path = os.path.join(UPLOAD_FOLDER, file.filename)
@@ -28,8 +33,7 @@ def home():
 
             try:
                 img = Image.open(save_path).convert("RGB")
-
-                result = workflow(img, file.filename)
+                result = workflow(img, file.filename, sample_type)
 
                 if result is None:
                     prediction = "Error"
