@@ -31,7 +31,7 @@ def workflow(image: Image.Image, filename: str = ""):
             )
 
         # bacterial
-        if "b.spot" in name or "bacterial" in name:
+        if "b.spot" in name or "b spot" in name or "bacterial" in name:
             return (
                 "Tomato Bacterial Spot",
                 REMEDY_DB["Tomato Bacterial Spot"]
