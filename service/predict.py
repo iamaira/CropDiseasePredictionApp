@@ -32,7 +32,7 @@ def workflow(image: Image.Image, filename: str = ""):
 - Maintain plant spacing."""
         )
 
-    # Default fallback
+    # Default
     return (
         "Apple Cedar Rust",
         """### Apple Cedar Rust
